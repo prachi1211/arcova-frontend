@@ -11,10 +11,10 @@ const testimonials = [
   },
   {
     name: 'Marco Rivera',
-    role: 'Hotel Supplier',
+    role: 'Hotel Host',
     initials: 'MR',
     quote:
-      'As a supplier, the analytics dashboard gives me insights I used to pay a consultant for. Occupancy is up 23% since I started using the dynamic pricing tools.',
+      'As a host, the analytics dashboard gives me insights I used to pay a consultant for. Occupancy is up 23% since I started using the dynamic pricing tools.',
   },
   {
     name: 'Aisha Patel',

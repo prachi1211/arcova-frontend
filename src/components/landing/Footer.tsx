@@ -3,7 +3,7 @@ const footerSections = [
     title: 'Platform',
     links: [
       { label: 'For Travelers', href: '#' },
-      { label: 'For Suppliers', href: '#' },
+      { label: 'For Hosts', href: '#' },
       { label: 'For Admins', href: '#' },
       { label: 'AI Concierge', href: '#' },
     ],

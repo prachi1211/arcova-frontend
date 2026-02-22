@@ -30,7 +30,7 @@
 8. [Design System — "Deep & Luxe"](#8-design-system--deep--luxe)
 9. [Module 1: Travel Search & Booking](#9-module-1-travel-search--booking)
 10. [Module 2: AI Travel Assistant](#10-module-2-ai-travel-assistant)
-11. [Module 3: Supplier Portal](#11-module-3-supplier-portal)
+11. [Module 3: Host Portal](#11-module-3-host-portal)
 12. [Module 4: Admin Dashboard](#12-module-4-admin-dashboard)
 13. [Day 1 Implementation Plan](#13-day-1-implementation-plan-8-hours)
 14. [Day 2 Implementation Plan](#14-day-2-implementation-plan-8-hours)
@@ -46,7 +46,7 @@ Arcova is a unified full-stack travel platform that consolidates three previousl
 
 ### The Core Idea
 
-One codebase. Three user experiences. A consumer searches and books travel. A supplier manages properties and pricing. An admin oversees the entire marketplace. All powered by the same API and database, differentiated only by role-based access.
+One codebase. Three user experiences. A traveller searches and books travel. A host manages properties and pricing. An admin oversees the entire marketplace. All powered by the same API and database, differentiated only by role-based access.
 
 ### What We Are Building
 
@@ -54,17 +54,17 @@ This platform unifies three modules that were originally designed as standalone 
 
 | Module | Origin PRD | User Role | Core Capability |
 |--------|-----------|-----------|-----------------|
-| Travel Search & Booking Engine | TravelAggregator API | Consumer | Search flights/hotels, filter, sort, book |
-| AI Travel Assistant | TripMind | Consumer | Conversational trip planning with LLM |
-| Supplier Portal | PartnerHub | Supplier | Property mgmt, pricing, analytics |
+| Travel Search & Booking Engine | TravelAggregator API | Traveller | Search flights/hotels, filter, sort, book |
+| AI Travel Assistant | TripMind | Traveller | Conversational trip planning with LLM |
+| Host Portal | PartnerHub | Host | Property mgmt, pricing, analytics |
 | Admin Dashboard | New (derived) | Admin | Platform oversight, user mgmt, reports |
 
 ### Why Unify?
 
-- **Shared data layer:** Hotels created by suppliers are the same hotels consumers search. One database, one truth.
+- **Shared data layer:** Hotels created by hosts are the same hotels travellers search. One database, one truth.
 - **Single auth system:** Supabase Auth with role-based access eliminates duplicate auth infrastructure.
 - **Faster development:** Shared React component library, shared API client, shared types.
-- **Realistic marketplace:** Data flows naturally: supplier creates hotel → consumer finds it → admin monitors it.
+- **Realistic marketplace:** Data flows naturally: host creates hotel → traveller finds it → admin monitors it.
 - **Deployment simplicity:** Two repos (frontend + backend), one database, one deploy pipeline.
 
 ---
@@ -82,8 +82,8 @@ The system follows a clean three-tier architecture with clear separation of conc
 │  ┌─────────────────────────────┐  ┌────────────────────────────┐│
 │  │  FRONTEND (React SPA)       │  │  BACKEND (Node.js/Express) ││
 │  │                             │  │                            ││
-│  │  Consumer Dashboard         │  │  /api/auth/*               ││
-│  │  Supplier Dashboard   REST  │  │  /api/search/*             ││
+│  │  Traveller Dashboard         │  │  /api/auth/*               ││
+│  │  Host Dashboard   REST  │  │  /api/search/*             ││
 │  │  Admin Dashboard     <───>  │  │  /api/bookings/*           ││
 │  │                       SSE   │  │  /api/properties/*         ││
 │  │  Role-Based Routing         │  │  /api/analytics/*          ││
@@ -173,7 +173,7 @@ Two completely independent Git repositories:
 
 ## 4. Database Schema (Supabase PostgreSQL)
 
-All tables live in a single Supabase PostgreSQL instance. Row Level Security (RLS) policies enforce access control at the database level, ensuring suppliers can only see their own data, consumers can only see their own bookings, and admins have full read access.
+All tables live in a single Supabase PostgreSQL instance. Row Level Security (RLS) policies enforce access control at the database level, ensuring hosts can only see their own data, travellers can only see their own bookings, and admins have full read access.
 
 ### Core Tables
 
@@ -186,11 +186,11 @@ CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL,
   full_name TEXT,
-  role TEXT NOT NULL DEFAULT 'consumer'
-    CHECK (role IN ('consumer', 'supplier', 'admin')),
+  role TEXT NOT NULL DEFAULT 'traveller'
+    CHECK (role IN ('traveller', 'host', 'admin')),
   avatar_url TEXT,
   phone TEXT,
-  company_name TEXT,          -- suppliers only
+  company_name TEXT,          -- hosts only
   company_verified BOOLEAN DEFAULT FALSE,
   preferences JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -200,7 +200,7 @@ CREATE TABLE profiles (
 
 #### `properties`
 
-Hotels/resorts managed by suppliers, searchable by consumers.
+Hotels/resorts managed by hosts, searchable by travellers.
 
 ```sql
 CREATE TABLE properties (
@@ -281,19 +281,19 @@ The schema also includes the following tables, following the same patterns:
 | `pricing_rules` | Dynamic pricing rules per room type (weekend, seasonal, occupancy-based, last-minute) |
 | `availability` | Daily availability and effective rate per room type per date |
 | `daily_metrics` | Pre-aggregated performance data (page views, CTR, conversion, revenue, occupancy) |
-| `search_history` | Consumer search logs for personalization and analytics |
+| `search_history` | Traveller search logs for personalization and analytics |
 | `conversations` | AI chat session storage (session_id, messages JSONB, preferences JSONB, trip_plan JSONB) |
-| `reviews` | Consumer reviews per booking (rating, comment, supplier response) |
+| `reviews` | Traveller reviews per booking (rating, comment, host response) |
 
 ### Row Level Security (RLS) Policies
 
 ```sql
--- Suppliers: only see their own properties
-CREATE POLICY supplier_properties ON properties
+-- Hosts: only see their own properties
+CREATE POLICY host_properties ON properties
   FOR ALL USING (supplier_id = auth.uid());
 
--- Consumers: only see their own bookings
-CREATE POLICY consumer_bookings ON bookings
+-- Travellers: only see their own bookings
+CREATE POLICY traveller_bookings ON bookings
   FOR SELECT USING (consumer_id = auth.uid());
 
 -- Admins: read everything
@@ -315,7 +315,7 @@ The same React frontend serves all three user roles. After login, the app reads 
 
 ### Role Matrix
 
-| Capability | Consumer | Supplier | Admin |
+| Capability | Traveller | Host | Admin |
 |-----------|----------|----------|-------|
 | Search hotels & flights | ✓ | — | ✓ |
 | Book hotels | ✓ | — | — |
@@ -332,10 +332,10 @@ The same React frontend serves all three user roles. After login, the app reads 
 
 ### Auth Flow
 
-1. User signs up via Supabase Auth (email + password). A Supabase trigger auto-creates a `profiles` row with `role = 'consumer'` (default).
-2. Admin can promote users to `'supplier'` or `'admin'` via the admin dashboard.
+1. User signs up via Supabase Auth (email + password). A Supabase trigger auto-creates a `profiles` row with `role = 'traveller'` (default).
+2. Admin can promote users to `'host'` or `'admin'` via the admin dashboard.
 3. On login, the frontend fetches the user's profile including role.
-4. React Router renders role-specific layouts: `ConsumerLayout`, `SupplierLayout`, or `AdminLayout`.
+4. React Router renders role-specific layouts: `TravellerLayout`, `HostLayout`, or `AdminLayout`.
 5. Every API request includes the Supabase JWT. Backend middleware validates the token and extracts the role.
 6. Unauthorized access returns `403` with a clear error message.
 
@@ -346,19 +346,19 @@ The same React frontend serves all three user roles. After login, the app reads 
 /auth/login                 → Login (public)
 /auth/signup                → Sign up with role selection (public)
 
-/consumer/                  → Consumer dashboard (search, recent)
-/consumer/search            → Search results (hotels + flights)
-/consumer/hotel/:id         → Hotel detail + booking
-/consumer/bookings          → My bookings list
-/consumer/assistant         → AI travel planner chat
+/traveller/                  → Traveller dashboard (search, recent)
+/traveller/search            → Search results (hotels + flights)
+/traveller/hotel/:id         → Hotel detail + booking
+/traveller/bookings          → My bookings list
+/traveller/assistant         → AI travel planner chat
 
-/supplier/                  → Supplier dashboard (KPIs, charts)
-/supplier/properties        → My properties list
-/supplier/properties/:id    → Property detail + room types
-/supplier/bookings          → Incoming bookings table
-/supplier/analytics         → Revenue & occupancy charts
-/supplier/pricing           → Pricing rules manager
-/supplier/availability      → Availability calendar grid
+/host/                  → Host dashboard (KPIs, charts)
+/host/properties        → My properties list
+/host/properties/:id    → Property detail + room types
+/host/bookings          → Incoming bookings table
+/host/analytics         → Revenue & occupancy charts
+/host/pricing           → Pricing rules manager
+/host/availability      → Availability calendar grid
 
 /admin/                     → Admin dashboard (platform metrics)
 /admin/users                → User management table
@@ -366,7 +366,7 @@ The same React frontend serves all three user roles. After login, the app reads 
 /admin/bookings             → All bookings (platform-wide)
 ```
 
-> **Note:** Routes like `/consumer/trip/:id`, `/admin/analytics`, and `/admin/settings` are deferred to post-MVP. The above routes align with the CLAUDE.md routing definitions.
+> **Note:** Routes like `/traveller/trip/:id`, `/admin/analytics`, and `/admin/settings` are deferred to post-MVP. The above routes align with the CLAUDE.md routing definitions.
 
 ---
 
@@ -386,7 +386,7 @@ arcova-backend/
 │   │   └── cache.ts                    # In-memory cache config (node-cache)
 │   ├── middleware/
 │   │   ├── auth.ts                     # JWT validation + role extraction → req.user
-│   │   ├── rbac.ts                     # requireRole('supplier','admin') factory
+│   │   ├── rbac.ts                     # requireRole('host','admin') factory
 │   │   ├── validate.ts                 # validate(zodSchema, 'body'|'query'|'params')
 │   │   ├── rateLimiter.ts              # Per-endpoint rate limits
 │   │   └── errorHandler.ts             # Global error handler
@@ -394,7 +394,7 @@ arcova-backend/
 │   │   ├── auth.routes.ts              # signup, login, me, profile update
 │   │   ├── search.routes.ts            # hotel/flight search
 │   │   ├── booking.routes.ts           # CRUD bookings
-│   │   ├── property.routes.ts          # supplier property + room type mgmt
+│   │   ├── property.routes.ts          # host property + room type mgmt
 │   │   ├── pricing.routes.ts           # pricing rules engine
 │   │   ├── availability.routes.ts      # availability calendar
 │   │   ├── analytics.routes.ts         # metrics & reports
@@ -445,12 +445,12 @@ arcova-backend/
 
 | Method | Path | Role | Description |
 |--------|------|------|-------------|
-| `POST` | `/api/auth/signup` | Public | Register new user (consumer/supplier) |
+| `POST` | `/api/auth/signup` | Public | Register new user (traveller/host) |
 | `POST` | `/api/auth/login` | Public | Login, returns JWT + profile |
 | `GET` | `/api/auth/me` | Any | Get current user profile |
 | `PUT` | `/api/auth/profile` | Any | Update profile |
 
-#### Search (Consumer)
+#### Search (Traveller)
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -463,17 +463,17 @@ arcova-backend/
 
 | Method | Path | Role | Description |
 |--------|------|------|-------------|
-| `POST` | `/api/bookings` | Consumer | Create a booking |
-| `GET` | `/api/bookings` | Consumer/Supplier | List bookings (filtered by role) |
+| `POST` | `/api/bookings` | Traveller | Create a booking |
+| `GET` | `/api/bookings` | Traveller/Host | List bookings (filtered by role) |
 | `GET` | `/api/bookings/:id` | Owner | Get booking detail |
-| `PATCH` | `/api/bookings/:id/cancel` | Consumer | Cancel a booking |
-| `GET` | `/api/bookings/summary?propertyId=&period=` | Supplier | Booking summary stats |
+| `PATCH` | `/api/bookings/:id/cancel` | Traveller | Cancel a booking |
+| `GET` | `/api/bookings/summary?propertyId=&period=` | Host | Booking summary stats |
 
-#### Properties (Supplier)
+#### Properties (Host)
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/properties` | List supplier's properties |
+| `GET` | `/api/properties` | List host's properties |
 | `POST` | `/api/properties` | Create new property |
 | `GET` | `/api/properties/:id` | Get property with rooms |
 | `PUT` | `/api/properties/:id` | Update property details |
@@ -482,7 +482,7 @@ arcova-backend/
 | `GET` | `/api/properties/:id/availability?start=&end=` | Get availability grid |
 | `PUT` | `/api/properties/:id/availability` | Bulk update availability |
 
-#### Pricing (Supplier)
+#### Pricing (Host)
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -492,7 +492,7 @@ arcova-backend/
 | `DELETE` | `/api/pricing/rules/:id` | Delete pricing rule |
 | `POST` | `/api/pricing/preview` | Preview effective rates for date range |
 
-#### AI Chat (Consumer)
+#### AI Chat (Traveller)
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -502,7 +502,7 @@ arcova-backend/
 | `GET` | `/api/chat/trip/:sessionId` | Get generated trip plan |
 | `PUT` | `/api/chat/trip/:sessionId/budget` | Adjust trip budget |
 
-#### Analytics (Supplier + Admin)
+#### Analytics (Host + Admin)
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -583,7 +583,7 @@ arcova-frontend/
 │   │   │   ├── CTA.tsx                      # Bottom call-to-action section
 │   │   │   ├── Navbar.tsx                   # Public nav: logo, links, Login/Signup
 │   │   │   └── Footer.tsx                   # Links, social, copyright
-│   │   ├── consumer/                        # Consumer-specific
+│   │   ├── traveller/                        # Traveller-specific
 │   │   │   ├── SearchBar.tsx
 │   │   │   ├── HotelCard.tsx
 │   │   │   ├── FlightCard.tsx
@@ -592,7 +592,7 @@ arcova-frontend/
 │   │   │   ├── TripPlanCard.tsx
 │   │   │   ├── BudgetTracker.tsx
 │   │   │   └── ItineraryTimeline.tsx
-│   │   ├── supplier/                        # Supplier-specific
+│   │   ├── host/                        # Host-specific
 │   │   │   ├── PropertyManager.tsx
 │   │   │   ├── RoomTypeEditor.tsx
 │   │   │   ├── PricingRuleForm.tsx
@@ -607,8 +607,8 @@ arcova-frontend/
 │   ├── layouts/
 │   │   ├── PublicLayout.tsx                 # Navbar + Footer for landing/public pages
 │   │   ├── AuthLayout.tsx                   # Centered card on gradient background
-│   │   ├── ConsumerLayout.tsx               # Consumer sidebar + header + <Outlet />
-│   │   ├── SupplierLayout.tsx               # Supplier sidebar + header + <Outlet />
+│   │   ├── TravellerLayout.tsx               # Traveller sidebar + header + <Outlet />
+│   │   ├── HostLayout.tsx               # Host sidebar + header + <Outlet />
 │   │   └── AdminLayout.tsx                  # Admin sidebar + header + <Outlet />
 │   │
 │   └── pages/                               # Route-level components (thin, <100 lines)
@@ -616,13 +616,13 @@ arcova-frontend/
 │       ├── auth/
 │       │   ├── Login.tsx
 │       │   └── Signup.tsx
-│       ├── consumer/
+│       ├── traveller/
 │       │   ├── Dashboard.tsx
 │       │   ├── Search.tsx
 │       │   ├── HotelDetail.tsx
 │       │   ├── Bookings.tsx
 │       │   └── Assistant.tsx
-│       ├── supplier/
+│       ├── host/
 │       │   ├── Dashboard.tsx
 │       │   ├── Properties.tsx
 │       │   ├── PropertyDetail.tsx
@@ -663,27 +663,27 @@ function App() {
         <Route path="/auth/signup" element={<Signup />} />
       </Route>
 
-      {/* Consumer */}
-      <Route element={<ProtectedRoute roles={['consumer']} />}>
-        <Route element={<ConsumerLayout />}>
-          <Route path="/consumer" element={<Dashboard />} />
-          <Route path="/consumer/search" element={<Search />} />
-          <Route path="/consumer/hotel/:id" element={<HotelDetail />} />
-          <Route path="/consumer/bookings" element={<Bookings />} />
-          <Route path="/consumer/assistant" element={<Assistant />} />
+      {/* Traveller */}
+      <Route element={<ProtectedRoute roles={['traveller']} />}>
+        <Route element={<TravellerLayout />}>
+          <Route path="/traveller" element={<Dashboard />} />
+          <Route path="/traveller/search" element={<Search />} />
+          <Route path="/traveller/hotel/:id" element={<HotelDetail />} />
+          <Route path="/traveller/bookings" element={<Bookings />} />
+          <Route path="/traveller/assistant" element={<Assistant />} />
         </Route>
       </Route>
 
-      {/* Supplier */}
-      <Route element={<ProtectedRoute roles={['supplier']} />}>
-        <Route element={<SupplierLayout />}>
-          <Route path="/supplier" element={<Dashboard />} />
-          <Route path="/supplier/properties" element={<Properties />} />
-          <Route path="/supplier/properties/:id" element={<PropertyDetail />} />
-          <Route path="/supplier/bookings" element={<Bookings />} />
-          <Route path="/supplier/analytics" element={<Analytics />} />
-          <Route path="/supplier/pricing" element={<Pricing />} />
-          <Route path="/supplier/availability" element={<Availability />} />
+      {/* Host */}
+      <Route element={<ProtectedRoute roles={['host']} />}>
+        <Route element={<HostLayout />}>
+          <Route path="/host" element={<Dashboard />} />
+          <Route path="/host/properties" element={<Properties />} />
+          <Route path="/host/properties/:id" element={<PropertyDetail />} />
+          <Route path="/host/bookings" element={<Bookings />} />
+          <Route path="/host/analytics" element={<Analytics />} />
+          <Route path="/host/pricing" element={<Pricing />} />
+          <Route path="/host/availability" element={<Availability />} />
         </Route>
       </Route>
 
@@ -788,7 +788,7 @@ Arcova's visual identity draws from premium travel and luxury hospitality. The a
 1. **Navbar** — Fixed, backdrop blur, logo, nav links, Login / Get Started buttons
 2. **Hero** — "Travel, Reimagined." (Playfair, large), subtext, dual CTA buttons
 3. **Social proof bar** — "Trusted by X travelers" or partner logos
-4. **Features grid** — 3-4 cards: AI Trip Planning, Smart Search, Supplier Analytics, Real-time Pricing
+4. **Features grid** — 3-4 cards: AI Trip Planning, Smart Search, Host Analytics, Real-time Pricing
 5. **How it works** — 3 steps: Search → Plan → Book
 6. **Testimonials** — 2-3 quote cards
 7. **CTA section** — Dark navy background, gold CTA, compelling headline
@@ -798,18 +798,18 @@ Arcova's visual identity draws from premium travel and luxury hospitality. The a
 
 ## 9. Module 1: Travel Search & Booking
 
-The search module is the consumer-facing core. It aggregates hotel and flight data from both the internal Supabase database (supplier-listed properties) and external APIs (Amadeus sandbox or mock data), applies filters and sorting, and returns paginated results.
+The search module is the traveller-facing core. It aggregates hotel and flight data from both the internal Supabase database (host-listed properties) and external APIs (Amadeus sandbox or mock data), applies filters and sorting, and returns paginated results.
 
 ### Search Flow
 
-1. Consumer enters search criteria: destination, dates, guests, optional filters (price range, star rating, amenities).
+1. Traveller enters search criteria: destination, dates, guests, optional filters (price range, star rating, amenities).
 2. Frontend sends `GET` request to `/api/search/hotels` with query parameters.
 3. Backend checks in-memory cache (TTL: 15 min for hotels, 5 min for flights). Returns cached results if available.
 4. If cache miss: queries Supabase for internal properties matching criteria, calls Amadeus/mock for external data, merges and deduplicates results.
 5. Applies business logic: dynamic pricing (weekend/seasonal surcharges), availability filtering, sorting (price, rating, relevance).
 6. Returns paginated response with `totalCount` and `hasNextPage` flag.
-7. Consumer clicks a hotel to see detail page with room types, availability calendar, and booking form.
-8. Consumer submits booking. Backend validates availability, calculates final price with any pricing rules, creates booking record, decrements availability.
+7. Traveller clicks a hotel to see detail page with room types, availability calendar, and booking form.
+8. Traveller submits booking. Backend validates availability, calculates final price with any pricing rules, creates booking record, decrements availability.
 
 ### Key Data Types
 
@@ -838,7 +838,7 @@ interface SearchResponse<T> {
 }
 ```
 
-### Consumer UI Components
+### Traveller UI Components
 
 | Component | Description |
 |-----------|-------------|
@@ -856,13 +856,13 @@ The AI module provides a conversational trip planning experience powered by Clau
 
 ### Conversation Flow
 
-1. Consumer opens the AI Assistant page. Frontend calls `POST /api/chat/new` to get a `sessionId`.
-2. Consumer sends a message (e.g., "I want a beach vacation for 7 days under $3000").
+1. Traveller opens the AI Assistant page. Frontend calls `POST /api/chat/new` to get a `sessionId`.
+2. Traveller sends a message (e.g., "I want a beach vacation for 7 days under $3000").
 3. Frontend sends `POST /api/chat/message` with SSE response streaming. Tokens appear in real-time.
 4. Backend maintains `ConversationContext` tracking gathered preferences: destination, dates, budget, travel style, group size.
 5. Once sufficient info is gathered, the LLM calls a `generate_trip_plan` tool. Backend parses the structured JSON output.
 6. Frontend renders the `TripPlanCard` with itinerary timeline, budget donut chart, and destination info.
-7. Consumer can refine: "Make it cheaper", "Swap this activity", "Add a day". Backend regenerates affected portions.
+7. Traveller can refine: "Make it cheaper", "Swap this activity", "Add a day". Backend regenerates affected portions.
 
 ### SSE Streaming Protocol
 
@@ -897,11 +897,11 @@ The LLM generates a structured JSON object with destination info, per-day itiner
 
 ---
 
-## 11. Module 3: Supplier Portal
+## 11. Module 3: Host Portal
 
-The supplier portal enables hotel partners to manage their entire property lifecycle: listing properties, configuring room types and pricing, managing availability, viewing bookings, and analyzing performance through rich analytics dashboards.
+The host portal enables hotel partners to manage their entire property lifecycle: listing properties, configuring room types and pricing, managing availability, viewing bookings, and analyzing performance through rich analytics dashboards.
 
-### Supplier Dashboard KPIs
+### Host Dashboard KPIs
 
 | Metric | Calculation | Trend |
 |--------|------------|-------|
@@ -914,7 +914,7 @@ The supplier portal enables hotel partners to manage their entire property lifec
 
 ### Pricing Engine
 
-The pricing engine supports multiple rule types that stack with priority ordering. Suppliers can preview the effective rates before activating rules.
+The pricing engine supports multiple rule types that stack with priority ordering. Hosts can preview the effective rates before activating rules.
 
 | Rule Type | Logic | Example |
 |-----------|-------|---------|
@@ -925,7 +925,7 @@ The pricing engine supports multiple rule types that stack with priority orderin
 
 Rules are evaluated in priority order (lower number = applied first). Each rule's adjustment is applied to the running price. The preview endpoint shows what rates would be for a date range with current rules applied, including which rules contributed to each day's effective rate.
 
-### Supplier UI Components
+### Host UI Components
 
 | Component | Description |
 |-----------|-------------|
@@ -949,10 +949,10 @@ The admin dashboard provides platform-wide oversight and management. Admins can 
 | Capability | Description |
 |-----------|-------------|
 | **Platform Metrics** | Total users, total properties, total bookings, platform revenue (commission), active listings, conversion rate |
-| **User Management** | Searchable user table with role badges. Promote consumer → supplier, supplier → admin. Deactivate accounts |
+| **User Management** | Searchable user table with role badges. Promote traveller → host, host → admin. Deactivate accounts |
 | **Property Moderation** | Queue of pending properties. Review details, approve to make searchable, reject with reason |
-| **Booking Oversight** | Platform-wide booking table. Filter by property, supplier, status, date. Investigate disputes |
-| **Revenue Reports** | Platform commission revenue over time, broken down by property and supplier |
+| **Booking Oversight** | Platform-wide booking table. Filter by property, host, status, date. Investigate disputes |
+| **Revenue Reports** | Platform commission revenue over time, broken down by property and host |
 | **System Health** | API response times, error rates, cache hit rates (future: integrate with monitoring) |
 
 ---
@@ -968,7 +968,7 @@ Backend fully functional with all API endpoints, database seeded, auth working. 
 | 0–1 | Project setup: init both repos, install deps, configure Supabase project, create all tables + RLS policies, configure env vars | Both repos compile. Supabase dashboard shows tables. |
 | 1–2 | Auth + middleware: Supabase Auth signup/login, JWT validation middleware, RBAC middleware, profile auto-creation trigger | Can signup, login, and hit protected endpoints with role checks. |
 | 2–4 | Search + Booking APIs: hotel/flight search with mock data provider, filters, sorting, pagination, caching. Booking CRUD with availability checks. | All search and booking endpoints working via Postman/curl. |
-| 4–6 | Supplier APIs: property CRUD, room types, pricing rules engine, availability calendar, analytics aggregation queries | Supplier can manage properties and see analytics via API. |
+| 4–6 | Host APIs: property CRUD, room types, pricing rules engine, availability calendar, analytics aggregation queries | Host can manage properties and see analytics via API. |
 | 6–7 | AI Chat API: Claude integration, SSE streaming endpoint, conversation memory, trip plan generation with structured output | Can chat with AI and receive streamed trip plans via curl. |
 | 7–8 | Database seeder: generate 3 sample properties, 90 days of bookings/metrics, pricing rules, availability. Admin endpoints. | Database populated with realistic data. All endpoints functional. |
 
@@ -983,9 +983,9 @@ Complete React frontend for all three roles. Polished UI with working data flow.
 | Hour | Task | Deliverable |
 |------|------|-------------|
 | 0–1 | Frontend scaffold: Vite + React + TypeScript + Tailwind + shadcn/ui. App shell, layouts for all 3 roles, React Router setup, auth context, API client with interceptors. | App renders with sidebar nav, login/signup works, redirects by role. |
-| 1–3 | Consumer UI: Search page (SearchBar, HotelCard grid, FlightCard list), Hotel detail page, booking flow, My Bookings page with status badges. | Consumer can search, view hotels, and see bookings. |
-| 3–4 | AI Assistant UI: ChatPanel with SSE streaming, ChatInput with suggestion chips, TripPlanCard rendering, BudgetTracker donut chart, ItineraryTimeline. | Consumer can chat with AI, see streaming responses and trip plans. |
-| 4–6 | Supplier UI: Dashboard with KPIGrid + charts (Recharts), Properties list + detail, BookingTable with filters/sort, PricingRuleForm + PricingPreview calendar, AvailabilityCalendar grid. | Supplier dashboard fully functional with live data. |
+| 1–3 | Traveller UI: Search page (SearchBar, HotelCard grid, FlightCard list), Hotel detail page, booking flow, My Bookings page with status badges. | Traveller can search, view hotels, and see bookings. |
+| 3–4 | AI Assistant UI: ChatPanel with SSE streaming, ChatInput with suggestion chips, TripPlanCard rendering, BudgetTracker donut chart, ItineraryTimeline. | Traveller can chat with AI, see streaming responses and trip plans. |
+| 4–6 | Host UI: Dashboard with KPIGrid + charts (Recharts), Properties list + detail, BookingTable with filters/sort, PricingRuleForm + PricingPreview calendar, AvailabilityCalendar grid. | Host dashboard fully functional with live data. |
 | 6–7 | Admin UI: Platform metrics cards, UserManagement table with role editing, PropertyApproval queue, platform-wide booking/revenue views. | Admin can manage users, approve properties, view reports. |
 | 7–8 | Polish + Deploy: Docker compose for both repos, responsive design pass, error states, loading skeletons, README with screenshots, final testing. | `docker-compose up` starts full stack. README complete. |
 
@@ -1053,9 +1053,9 @@ services:
 | Search | Hotel + flight search with filters | Returns paginated results, sorts work, cache hits on repeat |
 | Booking | Create, view, cancel bookings | Full lifecycle works, availability decrements |
 | AI Chat | Conversational trip planning | Streamed responses, generates structured trip plan |
-| Supplier | Property + pricing management | CRUD works, pricing preview shows correct rates |
-| Supplier | Analytics dashboard | 6 KPIs + 3 charts render with real data |
-| Supplier | Availability calendar | Grid renders, click-to-edit works |
+| Host | Property + pricing management | CRUD works, pricing preview shows correct rates |
+| Host | Analytics dashboard | 6 KPIs + 3 charts render with real data |
+| Host | Availability calendar | Grid renders, click-to-edit works |
 | Admin | User management | Can list users, change roles |
 | Admin | Property moderation | Can approve/reject pending properties |
 | Tech | Docker deployment | `docker-compose up` starts full stack |
@@ -1072,7 +1072,7 @@ services:
 - Payment integration (Stripe) with real checkout flow
 - OAuth login (Google, GitHub) via Supabase Auth
 - Real-time booking notifications via Supabase Realtime (WebSocket)
-- Review system: consumers rate stays, suppliers respond
+- Review system: travellers rate stays, hosts respond
 - Image upload for properties via Supabase Storage
 - Email notifications (booking confirmation, cancellation)
 
@@ -1081,7 +1081,7 @@ services:
 - AI-powered pricing suggestions based on demand signals and competitor rates
 - Multi-destination trip planning in AI assistant
 - Collaborative trip planning (share with friends via link)
-- Rate parity monitoring for suppliers
+- Rate parity monitoring for hosts
 - Elasticsearch for full-text hotel search
 - A/B testing framework for search ranking algorithms
 - Mobile-responsive PWA with offline support
@@ -1093,7 +1093,7 @@ services:
 - Redis for distributed caching (horizontal scaling)
 - Multi-language and multi-currency support
 - Machine learning for personalized search ranking
-- Supplier revenue management AI copilot
+- Host revenue management AI copilot
 
 ---
 
