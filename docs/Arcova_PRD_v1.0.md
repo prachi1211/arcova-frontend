@@ -118,7 +118,7 @@ Two completely independent Git repositories:
 
 | Repository | Stack | Port | Deploy Target |
 |-----------|-------|------|---------------|
-| `arcova-frontend` | React 18 + Vite + TypeScript + Tailwind | 5173 (dev) | Vercel / Netlify |
+| `arcova-frontend` | React 18 + Vite + TypeScript + Tailwind | 5173 (dev) | https://witharcova.vercel.app |
 | `arcova-backend` | Node.js + Express + TypeScript + Supabase SDK | 3001 (dev) | Railway / Render / Fly.io |
 
 ---
