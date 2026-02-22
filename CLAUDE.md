@@ -21,8 +21,8 @@ They share NOTHING at the filesystem level. Type contracts are duplicated — ba
 
 ### 1.2 What is Arcova?
 A unified travel platform serving three user roles through one frontend and one backend:
-- **Consumer** — searches hotels/flights, books travel, uses AI-powered trip planner
-- **Supplier** — manages hotel properties, pricing rules, availability, views analytics dashboard
+- **Traveller** — searches hotels/flights, books travel, uses AI-powered trip planner
+- **Host** — manages hotel properties, pricing rules, availability, views analytics dashboard
 - **Admin** — oversees platform, manages users, moderates property listings, views platform metrics
 
 Plus a **public landing page** showcasing features, pricing, and CTAs.
@@ -46,7 +46,7 @@ arcova-backend/
 │   ├── middleware/                      # Each file exports ONE middleware function or factory.
 │   │   ├── auth.ts                     # JWT verification → attaches req.user = { id, email, role }
 │   │   │                               # WHY Supabase verify: They handle JWT rotation, revocation, refresh.
-│   │   ├── rbac.ts                     # requireRole('supplier','admin') — factory returns middleware
+│   │   ├── rbac.ts                     # requireRole('host','admin') — factory returns middleware
 │   │   │                               # WHY factory: Composable. One function, multiple role configs.
 │   │   ├── validate.ts                 # validate(zodSchema, 'body'|'query'|'params') — factory
 │   │   │                               # WHY Zod: Same language as TypeScript types. One mental model.
@@ -177,15 +177,15 @@ arcova-frontend/src/
 │   │   ├── CTA.tsx                      # Bottom call-to-action section
 │   │   ├── Navbar.tsx                   # Public nav: logo, links, Login/Signup buttons
 │   │   └── Footer.tsx                   # Links, social, copyright
-│   ├── consumer/                        # Consumer-only
-│   ├── supplier/                        # Supplier-only
+│   ├── traveller/                       # Traveller-only
+│   ├── host/                            # Host-only
 │   └── admin/                           # Admin-only
 │
 ├── layouts/
 │   ├── PublicLayout.tsx                 # Navbar + Footer for landing/public pages
 │   ├── AuthLayout.tsx                   # Centered card for login/signup
-│   ├── ConsumerLayout.tsx               # Consumer sidebar + header + <Outlet />
-│   ├── SupplierLayout.tsx               # Supplier sidebar + header + <Outlet />
+│   ├── TravellerLayout.tsx              # Traveller sidebar + header + <Outlet />
+│   ├── HostLayout.tsx                   # Host sidebar + header + <Outlet />
 │   └── AdminLayout.tsx                  # Admin sidebar + header + <Outlet />
 │
 └── pages/
@@ -193,13 +193,13 @@ arcova-frontend/src/
     ├── auth/
     │   ├── Login.tsx
     │   └── Signup.tsx
-    ├── consumer/
+    ├── traveller/
     │   ├── Dashboard.tsx
     │   ├── Search.tsx
     │   ├── HotelDetail.tsx
     │   ├── Bookings.tsx
     │   └── Assistant.tsx
-    ├── supplier/
+    ├── host/
     │   ├── Dashboard.tsx
     │   ├── Properties.tsx
     │   ├── PropertyDetail.tsx
@@ -340,7 +340,7 @@ app.listen(Number(env.PORT));
 ### 3.2 Middleware Order Per Endpoint
 Always: **auth → rbac → validation → handler**
 ```typescript
-router.post('/', authMiddleware, requireRole('consumer'), validate(schema), handler);
+router.post('/', authMiddleware, requireRole('traveller'), validate(schema), handler);
 ```
 
 ### 3.3 Layering: Route → Service → Database
@@ -402,7 +402,7 @@ Request → auth.ts extracts Bearer token
 ```
 
 ### 3.8 Authorization
-`requireRole('supplier', 'admin')` — middleware factory. Data-level auth (own data only) happens in services via `.eq('supplier_id', userId)`.
+`requireRole('host', 'admin')` — middleware factory. Data-level auth (own data only) happens in services via `.eq('supplier_id', userId)`.
 
 ### 3.9 Database Query Patterns
 Supabase JS query builder. Not raw SQL, not an ORM.
@@ -466,7 +466,7 @@ Supabase PostgreSQL 15. Connected via JS client (REST API), not direct pg connec
 MVP: Single SQL file in Supabase SQL Editor. Post-MVP: Supabase CLI migrations.
 
 ### 4.4 Seed Data
-`npm run seed` creates: 5 users (1 admin, 2 suppliers, 2 consumers), 6 properties, room types, pricing rules, 90 days of bookings + metrics, 30 days of availability. Deterministic.
+`npm run seed` creates: 5 users (1 admin, 2 hosts, 2 travellers), 6 properties, room types, pricing rules, 90 days of bookings + metrics, 30 days of availability. Deterministic.
 
 ### 4.5 Triggers
 - `handle_new_user()` — auto-creates profile on auth signup
@@ -494,27 +494,27 @@ React 18 + Vite + TypeScript. SPA, not SSR. No Next.js (dashboard app, no SEO ne
     <Route path="/auth/signup" element={<Signup />} />
   </Route>
 
-  {/* Consumer */}
-  <Route element={<ProtectedRoute roles={['consumer']} />}>
-    <Route element={<ConsumerLayout />}>
-      <Route path="/consumer" element={<Dashboard />} />
-      <Route path="/consumer/search" element={<Search />} />
-      <Route path="/consumer/hotel/:id" element={<HotelDetail />} />
-      <Route path="/consumer/bookings" element={<Bookings />} />
-      <Route path="/consumer/assistant" element={<Assistant />} />
+  {/* Traveller */}
+  <Route element={<ProtectedRoute roles={['traveller']} />}>
+    <Route element={<TravellerLayout />}>
+      <Route path="/traveller" element={<Dashboard />} />
+      <Route path="/traveller/search" element={<Search />} />
+      <Route path="/traveller/hotel/:id" element={<HotelDetail />} />
+      <Route path="/traveller/bookings" element={<Bookings />} />
+      <Route path="/traveller/assistant" element={<Assistant />} />
     </Route>
   </Route>
 
-  {/* Supplier */}
-  <Route element={<ProtectedRoute roles={['supplier']} />}>
-    <Route element={<SupplierLayout />}>
-      <Route path="/supplier" element={<Dashboard />} />
-      <Route path="/supplier/properties" element={<Properties />} />
-      <Route path="/supplier/properties/:id" element={<PropertyDetail />} />
-      <Route path="/supplier/bookings" element={<Bookings />} />
-      <Route path="/supplier/analytics" element={<Analytics />} />
-      <Route path="/supplier/pricing" element={<Pricing />} />
-      <Route path="/supplier/availability" element={<Availability />} />
+  {/* Host */}
+  <Route element={<ProtectedRoute roles={['host']} />}>
+    <Route element={<HostLayout />}>
+      <Route path="/host" element={<Dashboard />} />
+      <Route path="/host/properties" element={<Properties />} />
+      <Route path="/host/properties/:id" element={<PropertyDetail />} />
+      <Route path="/host/bookings" element={<Bookings />} />
+      <Route path="/host/analytics" element={<Analytics />} />
+      <Route path="/host/pricing" element={<Pricing />} />
+      <Route path="/host/availability" element={<Availability />} />
     </Route>
   </Route>
 
@@ -549,7 +549,7 @@ React 18 + Vite + TypeScript. SPA, not SSR. No Next.js (dashboard app, no SEO ne
 5. Compose components, handle loading/error/empty
 
 ### 5.5 How To Add a New Component
-1. Decide folder: `shared/`, `consumer/`, `supplier/`, `admin/`, or `landing/`
+1. Decide folder: `shared/`, `traveller/`, `host/`, `admin/`, or `landing/`
 2. One file: `{Name}.tsx` (PascalCase)
 3. Props interface at top: `interface {Name}Props`
 4. Named export: `export function Name({ ... }: Props) {}`
@@ -557,10 +557,10 @@ React 18 + Vite + TypeScript. SPA, not SSR. No Next.js (dashboard app, no SEO ne
 
 ### 5.6 Layout System
 ```tsx
-export function SupplierLayout() {
+export function HostLayout() {
   return (
     <div className="flex h-screen">
-      <Sidebar role="supplier" />
+      <Sidebar role="host" />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
         <main className="flex-1 overflow-auto p-6">
@@ -920,7 +920,7 @@ The landing page should include these sections in order:
 1. **Navbar** — logo, nav links, Login / Get Started buttons
 2. **Hero** — headline (Playfair, large), subtext, dual CTA buttons, optional hero image or illustration
 3. **Social proof bar** — "Trusted by X travelers" or partner logos
-4. **Features grid** — 3-4 feature cards: AI Trip Planning, Smart Search, Supplier Analytics, Real-time Pricing
+4. **Features grid** — 3-4 feature cards: AI Trip Planning, Smart Search, Host Analytics, Real-time Pricing
 5. **How it works** — 3 steps with icons: Search → Plan → Book
 6. **Testimonials** — 2-3 quote cards
 7. **CTA section** — dark navy background, gold CTA button, compelling headline

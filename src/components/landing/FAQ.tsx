@@ -22,12 +22,12 @@ const faqs = [
   {
     question: 'How can I list my property on Arcova?',
     answer:
-      "Sign up as a supplier, and you'll get access to our property management dashboard. Add your property details, room types, photos, and pricing. Our team reviews every listing to maintain quality standards. Once approved, your property is live and bookable.",
+      "Sign up as a host, and you'll get access to our property management dashboard. Add your property details, room types, photos, and pricing. Our team reviews every listing to maintain quality standards. Once approved, your property is live and bookable.",
   },
   {
-    question: 'What analytics tools do suppliers get?',
+    question: 'What analytics tools do hosts get?',
     answer:
-      'Suppliers receive a comprehensive dashboard with real-time occupancy rates, revenue trends, channel performance, and competitor insights. Our dynamic pricing engine automatically adjusts rates based on demand, seasonality, and market conditions to maximize your revenue.',
+      'Hosts receive a comprehensive dashboard with real-time occupancy rates, revenue trends, channel performance, and competitor insights. Our dynamic pricing engine automatically adjusts rates based on demand, seasonality, and market conditions to maximize your revenue.',
   },
   {
     question: 'Is my data secure on Arcova?',
