@@ -1,0 +1,93 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Navy palette */
+  --color-navy-50: #F8FAFC;
+  --color-navy-100: #F1F5F9;
+  --color-navy-600: #475569;
+  --color-navy-700: #334155;
+  --color-navy-800: #1E293B;
+  --color-navy-900: #0F172A;
+  --color-navy-950: #0A0F1E;
+
+  /* Gold palette */
+  --color-gold-100: #FBF3E0;
+  --color-gold-200: #F5E0B0;
+  --color-gold-300: #EDCF8C;
+  --color-gold-400: #E2BC6A;
+  --color-gold-500: #D4A853;
+  --color-gold-600: #B8923F;
+
+  /* Warm Slate neutrals */
+  --color-warm-50: #FAFAF8;
+  --color-warm-100: #F5F5F0;
+  --color-warm-200: #E8E8E0;
+  --color-warm-300: #D4D4CC;
+  --color-warm-400: #ADADA5;
+  --color-warm-500: #8A8A80;
+  --color-warm-600: #6A6A62;
+  --color-warm-700: #4A4A44;
+  --color-warm-900: #1A1A18;
+
+  /* Fonts */
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  :root {
+    --background: 40 20% 98%;
+    --foreground: 40 6% 10%;
+    --card: 40 20% 97%;
+    --card-foreground: 40 6% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 40 6% 10%;
+    --primary: 40 52% 58%;
+    --primary-foreground: 222 47% 9%;
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 9%;
+    --muted: 40 12% 90%;
+    --muted-foreground: 40 6% 35%;
+    --accent: 40 52% 58%;
+    --accent-foreground: 222 47% 9%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 40 12% 88%;
+    --input: 40 12% 88%;
+    --ring: 40 52% 58%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 40 20% 96%;
+    --card: 222 33% 10%;
+    --card-foreground: 40 20% 96%;
+    --primary: 40 52% 58%;
+    --primary-foreground: 222 47% 6%;
+    --secondary: 217 19% 22%;
+    --secondary-foreground: 40 20% 96%;
+    --muted: 217 19% 22%;
+    --muted-foreground: 40 12% 60%;
+    --accent: 40 52% 58%;
+    --border: 217 19% 22%;
+    --input: 217 19% 22%;
+    --ring: 40 52% 58%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  * {
+    border-color: var(--color-warm-200);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-warm-50);
+    color: var(--color-warm-900);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
