@@ -8,51 +8,51 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
-const TRAVELER_IMAGE =
+const TRAVELLER_IMAGE =
   'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?auto=format&fit=crop&w=800&q=80';
-const SUPPLIER_IMAGE =
+const HOST_IMAGE =
   'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=800&q=80';
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const travelerFeatures = [
+const travellerFeatures = [
+  {
+    icon: Search,
+    title: 'Smart Hotel Search',
+    desc: 'Find the perfect stay with intelligent filters across hundreds of curated properties worldwide — no login required.',
+  },
   {
     icon: Sparkles,
     title: 'AI Trip Planning',
-    desc: 'Personalized itineraries crafted by AI based on your style, budget, and interests.',
-  },
-  {
-    icon: Search,
-    title: 'Smart Search',
-    desc: 'Find the perfect stay with intelligent filters across hundreds of curated properties.',
+    desc: 'Personalised itineraries crafted by AI based on your style, budget, and travel dates. Plan a 10-day trip in minutes.',
   },
   {
     icon: MessageCircle,
-    title: '24/7 Concierge',
-    desc: 'An always-on travel assistant for real-time recommendations and support.',
+    title: '24/7 AI Concierge',
+    desc: 'An always-on travel assistant for real-time recommendations, local tips, and support throughout your journey.',
   },
 ];
 
-const supplierFeatures = [
+const hostFeatures = [
   {
     icon: BarChart3,
     title: 'Revenue Analytics',
-    desc: 'Real-time dashboards with occupancy, revenue trends, and channel performance.',
+    desc: 'Real-time dashboards with occupancy rates, revenue trends, and booking channel performance.',
   },
   {
     icon: Zap,
     title: 'Dynamic Pricing',
-    desc: 'Automated rate adjustments that respond to demand, seasons, and market shifts.',
+    desc: 'Automated rate adjustments that respond to demand, seasons, and local market shifts.',
   },
   {
     icon: CalendarRange,
     title: 'Availability Control',
-    desc: 'Manage room inventory across all room types with bulk update tools.',
+    desc: 'Manage room inventory across all room types with bulk update tools and calendar views.',
   },
 ];
 
 const stats = [
-  { value: '10K+', label: 'Travelers' },
+  { value: '10K+', label: 'Travellers' },
   { value: '500+', label: 'Properties' },
   { value: '98%', label: 'Satisfaction' },
   { value: '24/7', label: 'AI Support' },
@@ -62,7 +62,7 @@ export function Features() {
   return (
     <section id="experience" className="py-24 md:py-32 bg-white overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-6 md:px-12">
-        {/* ── Section header ── */}
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -78,17 +78,16 @@ export function Features() {
             <span className="w-10 h-px bg-gold-500" />
           </div>
           <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl font-semibold text-navy-950 leading-[1.1] tracking-tight mb-5">
-            A Seamless Ecosystem for
+            One Platform.
             <br />
-            <span className="italic text-gold-500">Extraordinary Travel.</span>
+            <span className="italic text-gold-500">Two Perspectives.</span>
           </h2>
           <p className="text-base md:text-lg text-warm-500 max-w-xl mx-auto leading-relaxed">
-            Three perspectives — traveler, host, and architect — united in one platform
-            that makes every journey effortless.
+            Whether you travel the world or host it — Arcova gives you the tools to do it better.
           </p>
         </motion.div>
 
-        {/* ── Block 1: Traveler — image left, text right ── */}
+        {/* Block 1: Traveller — image left, features right */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center mb-20 md:mb-28">
           <motion.div
             initial={{ opacity: 0, x: -40 }}
@@ -99,14 +98,13 @@ export function Features() {
           >
             <div className="relative aspect-[4/3] overflow-hidden">
               <img
-                src={TRAVELER_IMAGE}
-                alt="Coastal road winding along dramatic cliffs at golden hour"
+                src={TRAVELLER_IMAGE}
+                alt="Traveller on a scenic coastal road"
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-navy-950/20 to-transparent" />
-              {/* Floating label */}
               <div className="absolute bottom-5 left-5 bg-white/90 backdrop-blur-sm rounded-full px-4 py-1.5 text-[11px] font-semibold text-navy-950 tracking-wide">
-                The Journey
+                For Travellers
               </div>
             </div>
           </motion.div>
@@ -118,19 +116,19 @@ export function Features() {
             transition={{ duration: 0.7, delay: 0.15, ease }}
           >
             <span className="text-[11px] font-semibold text-gold-600 uppercase tracking-[0.25em] mb-4 block">
-              For Travelers
+              For Travellers
             </span>
             <h3 className="font-heading text-3xl md:text-[42px] font-semibold text-navy-950 leading-[1.1] tracking-tight mb-4">
               Your Journey, Intelligently Crafted
             </h3>
             <p className="text-base text-warm-500 leading-relaxed mb-8 max-w-md">
-              From discovering hidden gems to booking the perfect stay — Arcova&apos;s AI
-              handles the complexity so you can focus on the experience.
+              From discovering hidden gems to booking the perfect stay — Arcova&apos;s AI handles
+              the complexity so you can focus on the experience.
             </p>
             <div className="space-y-5">
-              {travelerFeatures.map((f) => (
+              {travellerFeatures.map((f) => (
                 <div key={f.title} className="flex items-start gap-4">
-                  <div className="mt-0.5 w-9 h-9 rounded-xl bg-gold-100 flex items-center justify-center flex-shrink-0">
+                  <div className="mt-0.5 w-9 h-9 rounded-xl bg-gold-100 flex items-center justify-center shrink-0">
                     <f.icon className="w-[18px] h-[18px] text-gold-600" />
                   </div>
                   <div>
@@ -143,7 +141,7 @@ export function Features() {
           </motion.div>
         </div>
 
-        {/* ── Block 2: Supplier — text left, image right ── */}
+        {/* Block 2: Host — features left, image right */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20 items-center mb-20 md:mb-28">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -160,12 +158,12 @@ export function Features() {
             </h3>
             <p className="text-base text-warm-500 leading-relaxed mb-8 max-w-md">
               Turn your property into a high-performing asset. Real-time insights, automated
-              pricing, and effortless availability management — all in one dashboard.
+              pricing, and effortless inventory management — all in one dashboard.
             </p>
             <div className="space-y-5">
-              {supplierFeatures.map((f) => (
+              {hostFeatures.map((f) => (
                 <div key={f.title} className="flex items-start gap-4">
-                  <div className="mt-0.5 w-9 h-9 rounded-xl bg-navy-950 flex items-center justify-center flex-shrink-0">
+                  <div className="mt-0.5 w-9 h-9 rounded-xl bg-navy-950 flex items-center justify-center shrink-0">
                     <f.icon className="w-[18px] h-[18px] text-gold-400" />
                   </div>
                   <div>
@@ -186,19 +184,19 @@ export function Features() {
           >
             <div className="relative aspect-[4/3] overflow-hidden">
               <img
-                src={SUPPLIER_IMAGE}
-                alt="Grand hotel lobby with warm ambient lighting and elegant design"
+                src={HOST_IMAGE}
+                alt="Luxury hotel lobby"
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-navy-950/20 to-transparent" />
               <div className="absolute bottom-5 right-5 bg-white/90 backdrop-blur-sm rounded-full px-4 py-1.5 text-[11px] font-semibold text-navy-950 tracking-wide">
-                The Destination
+                For Hosts
               </div>
             </div>
           </motion.div>
         </div>
 
-        {/* ── Stats strip ── */}
+        {/* Stats strip */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -206,7 +204,6 @@ export function Features() {
           transition={{ duration: 0.7, ease }}
           className="rounded-3xl md:rounded-[32px] bg-navy-950 p-8 sm:p-10 md:p-14 relative overflow-hidden"
         >
-          {/* Decorative elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-gold-500/[0.04] rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-gold-500/[0.04] rounded-full blur-3xl" />
 
