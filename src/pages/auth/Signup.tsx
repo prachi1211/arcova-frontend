@@ -5,17 +5,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Loader2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
 
 const schema = z
   .object({
     fullName: z.string().min(2, 'Full name must be at least 2 characters'),
     email: z.string().email('Enter a valid email address'),
     role: z.enum(['traveller', 'host'], { error: 'Please select a role' }),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Must contain an uppercase letter')
-      .regex(/[0-9]/, 'Must contain a number'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
   })
   .refine((d) => d.password === d.confirmPassword, {
@@ -32,9 +30,11 @@ const ROLES = [
 
 export default function Signup() {
   const navigate = useNavigate();
+  const { setAuth } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [emailSent, setEmailSent] = useState(false);
 
   const {
     register,
@@ -49,15 +49,67 @@ export default function Signup() {
   const onSubmit = async (data: FormData) => {
     setServerError('');
     try {
-      // TODO: Call POST /api/auth/signup with { fullName, email, password, role }
-      // TODO: On success, call useAuthStore.setAuth(user, token)
-      // TODO: Redirect based on role → /traveller, /host
-      console.log('Signup payload:', data);
-      navigate('/auth/login');
-    } catch {
-      setServerError('Something went wrong. Please try again.');
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: { full_name: data.fullName, role: data.role },
+        },
+      });
+      if (error) throw error;
+
+      console.log('[Signup] authData:', { user: authData.user?.id, session: !!authData.session });
+
+      // Get session — either returned directly or by signing in immediately after
+      let session = authData.session;
+      if (!session) {
+        console.log('[Signup] No session from signUp — attempting signInWithPassword');
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        console.log('[Signup] signIn result:', { session: !!signInData.session, error: signInError?.message });
+        if (signInError) {
+          setServerError(`Sign-in failed: ${signInError.message}`);
+          return;
+        }
+        session = signInData.session;
+      }
+
+      if (session) {
+        setAuth(
+          { id: session.user.id, email: session.user.email!, role: data.role, fullName: data.fullName },
+          session.access_token,
+        );
+        navigate(data.role === 'traveller' ? '/traveller' : '/host');
+      } else {
+        setEmailSent(true);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setServerError(msg);
     }
   };
+
+  if (emailSent) {
+    return (
+      <div className="text-center">
+        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+          <Check size={24} className="text-emerald-600" />
+        </div>
+        <h1 className="font-heading text-2xl font-semibold text-navy-950 mb-2">Check your inbox</h1>
+        <p className="text-sm text-warm-500 mb-6">
+          We sent a confirmation link to your email. Click it to activate your account.
+        </p>
+        <Link
+          to="/auth/login"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-navy-950 text-white text-sm font-medium hover:bg-navy-800 transition-colors"
+        >
+          Back to sign in
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div>

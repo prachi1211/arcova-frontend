@@ -1,11 +1,13 @@
+import { Link } from 'react-router-dom';
+
 const footerSections = [
   {
     title: 'Platform',
     links: [
-      { label: 'For Travelers', href: '#' },
-      { label: 'For Hosts', href: '#' },
-      { label: 'For Admins', href: '#' },
-      { label: 'AI Concierge', href: '#' },
+      { label: 'Start Exploring', href: '/search' },
+      { label: 'For Travellers', href: '/auth/signup' },
+      { label: 'For Hosts', href: '/auth/signup' },
+      { label: 'AI Concierge', href: '/auth/signup' },
     ],
   },
   {
@@ -39,7 +41,7 @@ export function Footer() {
             </button>
             <p className="text-warm-500 text-[15px] leading-relaxed mb-8 max-w-xs">
               Where every arc of your journey finds its perfect cova — your destination,
-              reimagined.
+              reimagined through AI.
             </p>
             <div className="flex gap-5">
               {['Twitter', 'Instagram', 'LinkedIn'].map((social) => (
@@ -63,12 +65,21 @@ export function Footer() {
               <ul className="space-y-3.5">
                 {section.links.map((link) => (
                   <li key={link.label}>
-                    <a
-                      href={link.href}
-                      className="text-sm text-warm-500 hover:text-gold-600 transition-colors duration-200"
-                    >
-                      {link.label}
-                    </a>
+                    {link.href.startsWith('/') ? (
+                      <Link
+                        to={link.href}
+                        className="text-sm text-warm-500 hover:text-gold-600 transition-colors duration-200"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={link.href}
+                        className="text-sm text-warm-500 hover:text-gold-600 transition-colors duration-200"
+                      >
+                        {link.label}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -84,7 +95,7 @@ export function Footer() {
             <div className="flex gap-2">
               <input
                 type="email"
-                placeholder="Email Address"
+                placeholder="Email address"
                 className="flex-grow h-11 px-5 rounded-full bg-warm-100 border border-warm-200 focus:border-gold-500 focus:ring-1 focus:ring-gold-500 focus:outline-none text-sm text-navy-950 placeholder:text-warm-400 transition-colors duration-200"
               />
               <button className="h-11 px-6 rounded-full bg-gold-500 text-[13px] font-semibold text-navy-950 hover:bg-gold-400 active:bg-gold-600 transition-colors duration-200 whitespace-nowrap">
@@ -98,15 +109,9 @@ export function Footer() {
         <div className="pt-8 border-t border-warm-200 flex flex-col md:flex-row justify-between items-center gap-6 text-[11px] font-semibold uppercase tracking-[0.15em] text-warm-400">
           <p>&copy; {new Date().getFullYear()} Arcova. All rights reserved.</p>
           <div className="flex gap-8 md:gap-10">
-            <a href="#" className="hover:text-navy-950 transition-colors duration-200">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-navy-950 transition-colors duration-200">
-              Terms of Service
-            </a>
-            <a href="#" className="hover:text-navy-950 transition-colors duration-200">
-              Cookie Policy
-            </a>
+            <a href="#" className="hover:text-navy-950 transition-colors duration-200">Privacy Policy</a>
+            <a href="#" className="hover:text-navy-950 transition-colors duration-200">Terms of Service</a>
+            <a href="#" className="hover:text-navy-950 transition-colors duration-200">Cookie Policy</a>
           </div>
         </div>
       </div>
