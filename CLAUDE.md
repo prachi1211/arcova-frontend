@@ -412,7 +412,7 @@ Supabase JS query builder. Not raw SQL, not an ORM.
 const { data, count, error } = await supabaseAdmin
   .from('bookings')
   .select('*, properties(name)', { count: 'exact' })
-  .eq('consumer_id', userId)
+  .eq('traveller_id', userId)
   .order('booked_at', { ascending: false })
   .range(page * limit, (page + 1) * limit - 1);
 
@@ -422,7 +422,7 @@ const { data, error } = await supabaseAdmin
 
 // UPDATE — always scope + return
 const { data, error } = await supabaseAdmin
-  .from('properties').update({ name }).eq('id', id).eq('supplier_id', userId).select().single();
+  .from('properties').update({ name }).eq('id', id).eq('host_id', userId).select().single();
 ```
 
 **ALWAYS check `error` after every call. Supabase doesn't throw — it returns `{ data, error }`.**
@@ -451,7 +451,7 @@ Supabase PostgreSQL 15. Connected via JS client (REST API), not direct pg connec
 | Element | Convention | Example |
 |---------|-----------|---------|
 | Tables | snake_case, plural | `properties`, `room_types` |
-| Columns | snake_case | `created_at`, `supplier_id` |
+| Columns | snake_case | `created_at`, `host_id` |
 | PKs | `id UUID DEFAULT gen_random_uuid()` | Always `id`, always UUID |
 | FKs | `{singular}_id` | `property_id` |
 | Timestamps | TIMESTAMPTZ | `created_at`, `updated_at` |
@@ -1071,7 +1071,7 @@ Frontend: `dev`, `build`, `preview`, `lint`, `typecheck`
 10. **`||` for defaults.** Use `??`.
 11. **Calling api directly in components.** Go through hooks.
 12. **Forgetting `.select()` on insert/update.** No data returned.
-13. **Not scoping supplier queries.** Always `.eq('supplier_id', userId)`.
+13. **Not scoping host queries.** Always `.eq('host_id', userId)`.
 14. **Playfair on body text.** Playfair is headings ONLY. Inter for everything else.
 15. **Overusing gold.** Gold is accent only. Primary CTAs and highlights. Not backgrounds or body text.
 

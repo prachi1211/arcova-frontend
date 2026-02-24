@@ -205,7 +205,7 @@ Hotels/resorts managed by hosts, searchable by travellers.
 ```sql
 CREATE TABLE properties (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  supplier_id UUID NOT NULL REFERENCES profiles(id),
+  host_id UUID NOT NULL REFERENCES profiles(id),
   name TEXT NOT NULL,
   description TEXT,
   city TEXT NOT NULL,
@@ -240,8 +240,9 @@ CREATE TABLE room_types (
   currency TEXT DEFAULT 'USD',
   total_inventory INT NOT NULL DEFAULT 1,
   amenities JSONB DEFAULT '[]',
-  status TEXT DEFAULT 'active',
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  status TEXT DEFAULT 'active' CHECK (status IN ('active','inactive')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ```
 
@@ -250,7 +251,7 @@ CREATE TABLE room_types (
 ```sql
 CREATE TABLE bookings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  consumer_id UUID NOT NULL REFERENCES profiles(id),
+  traveller_id UUID NOT NULL REFERENCES profiles(id),
   property_id UUID NOT NULL REFERENCES properties(id),
   room_type_id UUID NOT NULL REFERENCES room_types(id),
   check_in DATE NOT NULL,
@@ -260,7 +261,7 @@ CREATE TABLE bookings (
   total_price_cents INT NOT NULL,
   commission_rate DECIMAL(4,2) DEFAULT 15.00,
   net_revenue_cents INT GENERATED ALWAYS AS (
-    total_price_cents - (total_price_cents * commission_rate / 100)
+    ROUND(total_price_cents - (total_price_cents * commission_rate / 100.0))
   ) STORED,
   status TEXT DEFAULT 'confirmed'
     CHECK (status IN ('confirmed','cancelled','completed','no_show')),
@@ -272,29 +273,109 @@ CREATE TABLE bookings (
 );
 ```
 
-### Additional Tables
+> **MVP notes:** `daily_metrics` dropped — analytics computed on the fly from `bookings`. Admin approval flow (`pending_review`) is post-MVP; properties default to `active`.
 
-The schema also includes the following tables, following the same patterns:
+#### `pricing_rules`
 
-| Table | Purpose |
-|-------|---------|
-| `pricing_rules` | Dynamic pricing rules per room type (weekend, seasonal, occupancy-based, last-minute) |
-| `availability` | Daily availability and effective rate per room type per date |
-| `daily_metrics` | Pre-aggregated performance data (page views, CTR, conversion, revenue, occupancy) |
-| `search_history` | Traveller search logs for personalization and analytics |
-| `conversations` | AI chat session storage (session_id, messages JSONB, preferences JSONB, trip_plan JSONB) |
-| `reviews` | Traveller reviews per booking (rating, comment, host response) |
+```sql
+CREATE TABLE pricing_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_type_id UUID NOT NULL REFERENCES room_types(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  rule_type TEXT NOT NULL CHECK (rule_type IN ('weekend','seasonal','last_minute','occupancy')),
+  adjustment_type TEXT NOT NULL CHECK (adjustment_type IN ('percentage','fixed')),
+  adjustment_value DECIMAL(10,2) NOT NULL,  -- positive = surcharge, negative = discount
+  priority INT NOT NULL DEFAULT 1,
+  days_of_week INT[],                       -- weekend: [6,7] (1=Mon)
+  date_from DATE,                           -- seasonal: range start
+  date_to DATE,                             -- seasonal: range end
+  days_before_checkin INT,                  -- last_minute: e.g. 3
+  occupancy_threshold DECIMAL(5,2),         -- occupancy: e.g. 80.00
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+#### `availability`
+
+```sql
+CREATE TABLE availability (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_type_id UUID NOT NULL REFERENCES room_types(id) ON DELETE CASCADE,
+  date DATE NOT NULL,
+  available_rooms INT NOT NULL,
+  effective_rate_cents INT,  -- base price + applied pricing rules
+  is_closed BOOLEAN DEFAULT FALSE,
+  UNIQUE(room_type_id, date)
+);
+```
+
+#### `search_history`
+
+```sql
+CREATE TABLE search_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  traveller_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  destination TEXT,
+  check_in DATE,
+  check_out DATE,
+  num_guests INT,
+  filters JSONB DEFAULT '{}',  -- price_range, star_rating, amenities, etc.
+  results_count INT,
+  searched_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+#### `conversations`
+
+Stores full AI assistant session state — messages, preferences, trip plan, and AI-surfaced suggestions.
+
+```sql
+CREATE TABLE conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+  traveller_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  messages JSONB DEFAULT '[]',           -- [{role, content, timestamp}]
+  preferences JSONB DEFAULT '{}',        -- budget, travel_style, interests, group_size, dates
+  trip_plan JSONB,                       -- structured day-by-day itinerary
+  suggested_flights JSONB DEFAULT '[]',  -- flight options surfaced by AI
+  suggested_hotels JSONB DEFAULT '[]',   -- hotel options surfaced by AI
+  suggested_places JSONB DEFAULT '[]',   -- POIs, restaurants, activities
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+#### `reviews`
+
+One review per booking enforced by unique constraint.
+
+```sql
+CREATE TABLE reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_id UUID NOT NULL REFERENCES bookings(id),
+  traveller_id UUID NOT NULL REFERENCES profiles(id),
+  property_id UUID NOT NULL REFERENCES properties(id),
+  rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  comment TEXT,
+  host_response TEXT,
+  host_responded_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(booking_id)
+);
+```
 
 ### Row Level Security (RLS) Policies
 
 ```sql
 -- Hosts: only see their own properties
 CREATE POLICY host_properties ON properties
-  FOR ALL USING (supplier_id = auth.uid());
+  FOR ALL USING (host_id = auth.uid());
 
 -- Travellers: only see their own bookings
 CREATE POLICY traveller_bookings ON bookings
-  FOR SELECT USING (consumer_id = auth.uid());
+  FOR SELECT USING (traveller_id = auth.uid());
 
 -- Admins: read everything
 CREATE POLICY admin_read_all ON properties
