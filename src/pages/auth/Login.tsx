@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/stores/authStore';
+import type { UserRole } from '@/stores/authStore';
 
 const schema = z.object({
   email: z.string().email('Enter a valid email address'),
@@ -13,8 +16,16 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
+const ROLE_HOME: Record<UserRole, string> = {
+  traveller: '/traveller',
+  host: '/host',
+  admin: '/admin',
+};
+
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { setAuth } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState('');
 
@@ -27,13 +38,33 @@ export default function Login() {
   const onSubmit = async (data: FormData) => {
     setServerError('');
     try {
-      // TODO: Call POST /api/auth/login with { email, password }
-      // TODO: On success, call useAuthStore.setAuth(user, token)
-      // TODO: Redirect based on role → /traveller, /host, /admin
-      console.log('Login payload:', data);
-      navigate('/');
-    } catch {
-      setServerError('Invalid email or password. Please try again.');
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+      if (error) throw error;
+
+      const session = authData.session!;
+      const meta = session.user.user_metadata;
+      // Role comes from user_metadata set at signup.
+      // TODO: Fetch from profiles table once DB is live.
+      const role: UserRole = (meta?.role as UserRole) ?? 'traveller';
+
+      setAuth(
+        {
+          id: session.user.id,
+          email: session.user.email!,
+          role,
+          fullName: meta?.full_name as string | undefined,
+        },
+        session.access_token,
+      );
+
+      const redirect = searchParams.get('redirect');
+      navigate(redirect ?? ROLE_HOME[role]);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Invalid email or password.';
+      setServerError(msg);
     }
   };
 

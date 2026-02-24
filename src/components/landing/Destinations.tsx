@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const destinations = [
   {
@@ -7,38 +8,44 @@ const destinations = [
     country: 'Greece',
     price: 'From $189/night',
     tag: 'Trending',
+    search: 'Santorini',
     image:
-      'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=800&q=80',
   },
   {
-    name: 'Bali',
-    country: 'Indonesia',
-    price: 'From $120/night',
-    tag: 'Popular',
-    image:
-      'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    name: 'Swiss Alps',
-    country: 'Switzerland',
-    price: 'From $340/night',
+    name: 'Maldives',
+    country: 'Indian Ocean',
+    price: 'From $320/night',
     tag: 'Luxury',
+    search: 'Maldives',
     image:
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1573843981267-be1999ff37cd?auto=format&fit=crop&w=800&q=80',
   },
   {
-    name: 'Tokyo',
+    name: 'Kyoto',
     country: 'Japan',
-    price: 'From $210/night',
+    price: 'From $130/night',
     tag: 'Cultural',
+    search: 'Kyoto',
     image:
-      'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1528360983277-13d401cdc186?auto=format&fit=crop&w=800&q=80',
+  },
+  {
+    name: 'Marrakech',
+    country: 'Morocco',
+    price: 'From $95/night',
+    tag: 'Exotic',
+    search: 'Marrakech',
+    image:
+      'https://images.unsplash.com/photo-1539650116574-8efeb43e2750?auto=format&fit=crop&w=800&q=80',
   },
 ];
 
 export function Destinations() {
+  const navigate = useNavigate();
+
   return (
-    <section id="destinations" className="py-24 md:py-32 bg-warm-50">
+    <section id="destinations" className="py-24 md:py-32 bg-white">
       <div className="max-w-[1400px] mx-auto px-6 md:px-12">
         {/* Header */}
         <motion.div
@@ -60,30 +67,36 @@ export function Destinations() {
               <br />
               the <span className="italic text-gold-500">Journey.</span>
             </h2>
-            <p className="text-base md:text-lg text-warm-600 max-w-md leading-relaxed md:text-right">
-              Every great arc deserves an extraordinary cova. Browse our curated collection of
-              premium properties worldwide.
-            </p>
+            <div className="flex flex-col items-start md:items-end gap-4">
+              <p className="text-base md:text-lg text-warm-600 max-w-md leading-relaxed md:text-right">
+                Explore our handpicked collection of premium properties. Click any destination to
+                browse available stays.
+              </p>
+              <Link
+                to="/search"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-gold-600 hover:text-gold-500 transition-colors group"
+              >
+                View all destinations
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
           </div>
         </motion.div>
 
-        {/* Destination grid */}
+        {/* 4-card grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
           {destinations.map((dest, index) => (
-            <motion.div
+            <motion.button
               key={dest.name}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
-              transition={{
-                delay: index * 0.1,
-                duration: 0.6,
-                ease: [0.16, 1, 0.3, 1],
-              }}
-              whileHover={{ y: -8 }}
-              className="group relative rounded-2xl md:rounded-3xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg shadow-navy-950/[0.04]"
+              transition={{ delay: index * 0.08, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              whileHover={{ y: -6 }}
+              onClick={() => navigate(`/search?destination=${encodeURIComponent(dest.search)}`)}
+              className="group relative rounded-2xl md:rounded-3xl overflow-hidden aspect-[3/4] cursor-pointer shadow-lg shadow-navy-950/[0.06] text-left w-full"
             >
-              {/* Image with zoom */}
+              {/* Image */}
               <img
                 src={dest.image}
                 alt={`${dest.name}, ${dest.country}`}
@@ -91,21 +104,19 @@ export function Destinations() {
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
               />
 
-              {/* Gradient overlay */}
+              {/* Gradient */}
               <div className="absolute inset-0 bg-gradient-to-t from-navy-950/80 via-navy-950/20 to-transparent" />
-
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-gold-500/0 group-hover:bg-gold-500/[0.06] transition-colors duration-500" />
+              <div className="absolute inset-0 bg-gold-500/0 group-hover:bg-gold-500/[0.05] transition-colors duration-500" />
 
               {/* Tag */}
-              <div className="absolute top-5 left-5">
+              <div className="absolute top-4 left-4">
                 <span className="inline-block px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-bold text-navy-950 uppercase tracking-wider">
                   {dest.tag}
                 </span>
               </div>
 
-              {/* Arrow on hover */}
-              <div className="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/0 group-hover:bg-white/90 flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
+              {/* Hover arrow */}
+              <div className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/0 group-hover:bg-white/90 flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0">
                 <ArrowUpRight size={16} className="text-navy-950" />
               </div>
 
@@ -114,14 +125,14 @@ export function Destinations() {
                 <h3 className="font-heading text-2xl font-semibold text-white tracking-tight mb-0.5">
                   {dest.name}
                 </h3>
-                <p className="text-[13px] text-warm-300 mb-2">{dest.country}</p>
+                <p className="text-[13px] text-warm-300 mb-1.5">{dest.country}</p>
                 <p className="text-[13px] font-semibold text-gold-400">{dest.price}</p>
               </div>
-            </motion.div>
+            </motion.button>
           ))}
         </div>
 
-        {/* Brand micro-note */}
+        {/* Arc · Cova micro-note */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}

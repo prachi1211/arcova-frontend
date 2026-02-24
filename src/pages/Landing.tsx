@@ -1,5 +1,6 @@
 import { Hero } from '@/components/landing/Hero';
 import { Features } from '@/components/landing/Features';
+import { HowItWorks } from '@/components/landing/HowItWorks';
 import { Destinations } from '@/components/landing/Destinations';
 import { Testimonials } from '@/components/landing/Testimonials';
 import { FAQ } from '@/components/landing/FAQ';
@@ -10,6 +11,7 @@ export default function Landing() {
     <>
       <Hero />
       <Features />
+      <HowItWorks />
       <Destinations />
       <Testimonials />
       <FAQ />
