@@ -312,6 +312,8 @@ export default function HotelDetail() {
   const reviews = getReviews(property.id);
   const maxGuests = Math.max(...availableRoomTypes.map((r) => r.maxGuests), 2);
   const lowestPrice = Math.min(...availableRoomTypes.map((r) => r.basePriceCents));
+  // Mock hotels have non-UUID IDs (e.g. 'mock-hotel-paris-0') — cannot be booked
+  const isMockProperty = !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(property.id);
 
   const inTrip = isInTrip(property.id);
 
@@ -865,49 +867,60 @@ export default function HotelDetail() {
 
                       {/* CTAs */}
                       <div className="space-y-2.5 pt-1">
-                        {/* Add to Trip */}
-                        <button
-                          onClick={handleAddToTrip}
-                          disabled={inTrip}
-                          className={cn(
-                            'w-full h-11 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all',
-                            inTrip
-                              ? 'border-emerald-200 bg-emerald-50 text-emerald-600 cursor-default'
-                              : 'border-navy-950 text-navy-950 hover:bg-navy-950 hover:text-white',
-                          )}
-                        >
-                          {inTrip ? (
-                            <>
-                              <Check size={14} /> Added to Trip
-                            </>
-                          ) : (
-                            <>
-                              <Plus size={14} /> Add to Trip
-                            </>
-                          )}
-                        </button>
+                        {isMockProperty ? (
+                          <div className="rounded-xl border border-warm-200 bg-warm-50 px-4 py-3 text-center">
+                            <p className="text-xs font-medium text-warm-600">Sample listing</p>
+                            <p className="text-[11px] text-warm-400 mt-0.5">
+                              Browse only — not available for booking
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Add to Trip */}
+                            <button
+                              onClick={handleAddToTrip}
+                              disabled={inTrip}
+                              className={cn(
+                                'w-full h-11 rounded-xl border text-sm font-semibold flex items-center justify-center gap-2 transition-all',
+                                inTrip
+                                  ? 'border-emerald-200 bg-emerald-50 text-emerald-600 cursor-default'
+                                  : 'border-navy-950 text-navy-950 hover:bg-navy-950 hover:text-white',
+                              )}
+                            >
+                              {inTrip ? (
+                                <>
+                                  <Check size={14} /> Added to Trip
+                                </>
+                              ) : (
+                                <>
+                                  <Plus size={14} /> Add to Trip
+                                </>
+                              )}
+                            </button>
 
-                        {/* Reserve Now */}
-                        <button
-                          onClick={() => void handleReserve()}
-                          disabled={!selectedRoomId || !checkIn || !checkOut || isReserveLoading}
-                          className="w-full h-11 rounded-xl bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-navy-950 text-sm font-semibold transition-all hover:shadow-[0_0_20px_rgba(212,168,83,0.25)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
-                        >
-                          {isReserveLoading ? (
-                            <>
-                              <Loader2 size={15} className="animate-spin" />
-                              {isCreatingBooking ? 'Creating reservation…' : 'Preparing payment…'}
-                            </>
-                          ) : !selectedRoomId ? (
-                            'Select a Room'
-                          ) : !checkIn || !checkOut ? (
-                            'Choose Dates'
-                          ) : user ? (
-                            'Reserve Now'
-                          ) : (
-                            'Sign in to Reserve'
-                          )}
-                        </button>
+                            {/* Reserve Now */}
+                            <button
+                              onClick={() => void handleReserve()}
+                              disabled={!selectedRoomId || !checkIn || !checkOut || isReserveLoading}
+                              className="w-full h-11 rounded-xl bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-navy-950 text-sm font-semibold transition-all hover:shadow-[0_0_20px_rgba(212,168,83,0.25)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
+                            >
+                              {isReserveLoading ? (
+                                <>
+                                  <Loader2 size={15} className="animate-spin" />
+                                  {isCreatingBooking ? 'Creating reservation…' : 'Preparing payment…'}
+                                </>
+                              ) : !selectedRoomId ? (
+                                'Select a Room'
+                              ) : !checkIn || !checkOut ? (
+                                'Choose Dates'
+                              ) : user ? (
+                                'Reserve Now'
+                              ) : (
+                                'Sign in to Reserve'
+                              )}
+                            </button>
+                          </>
+                        )}
                       </div>
 
                       {/* Reserve error */}
@@ -917,9 +930,11 @@ export default function HotelDetail() {
                         </p>
                       )}
 
-                      <p className="text-[11px] text-center text-warm-400">
-                        Secure payment · Free cancellation up to 48h
-                      </p>
+                      {!isMockProperty && (
+                        <p className="text-[11px] text-center text-warm-400">
+                          Secure payment · Free cancellation up to 48h
+                        </p>
+                      )}
                     </div>
                   </motion.div>
                 )}
