@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   ArrowLeft,
@@ -23,10 +24,13 @@ import {
   Images,
   PawPrint,
   BedDouble,
+  Loader2,
 } from 'lucide-react';
 import { useHotelDetail } from '@/hooks/useSearch';
+import { useCreateBooking, useCreatePaymentIntent } from '@/hooks/useBookings';
 import { useAuthStore } from '@/stores/authStore';
 import { useTripStore, type TripItem } from '@/stores/tripStore';
+import { PaymentModal } from '@/components/traveller/PaymentModal';
 import { formatCurrency, nightsBetween } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
@@ -215,9 +219,12 @@ function DetailSkeleton() {
 export default function HotelDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const { addItem, setPendingItem, setShowAuthGate, isInTrip } = useTripStore();
   const { data, isLoading } = useHotelDetail(id ?? '');
+  const { mutateAsync: createBookingAsync, isPending: isCreatingBooking } = useCreateBooking();
+  const { mutateAsync: createIntentAsync, isPending: isCreatingIntent } = useCreatePaymentIntent();
 
   // Gallery
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -232,6 +239,15 @@ export default function HotelDetail() {
   const [guests, setGuests] = useState(2);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+
+  // Payment
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [paymentData, setPaymentData] = useState<{
+    bookingId: string;
+    clientSecret: string;
+    amountCents: number;
+  } | null>(null);
+  const [reserveError, setReserveError] = useState('');
 
   const openGallery = (index: number) => {
     setGalleryIndex(index);
@@ -317,13 +333,41 @@ export default function HotelDetail() {
     }
   };
 
-  const handleReserve = () => {
+  const isReserveLoading = isCreatingBooking || isCreatingIntent;
+
+  const handleReserve = async () => {
     if (!user) {
-      navigate(`/auth/login?redirect=${encodeURIComponent(`/hotel/${id}`)}`);
+      navigate(`/auth/login?redirect=${encodeURIComponent(`/traveller/hotel/${id}`)}`);
       return;
     }
-    // Mock booking confirmation
-    setBookingSuccess(true);
+    setReserveError('');
+    try {
+      // Step 1: Create booking record in DB
+      const booking = await createBookingAsync({
+        property_id: property.id,
+        room_type_id: selectedRoomId!,
+        check_in: checkIn,
+        check_out: checkOut,
+        num_guests: guests,
+        num_rooms: 1,
+      });
+
+      // Step 2: Create Stripe PaymentIntent for the booking
+      const intent = await createIntentAsync(booking.id);
+
+      setPaymentData({
+        bookingId: booking.id,
+        clientSecret: intent.clientSecret,
+        amountCents: intent.amountCents,
+      });
+      setPaymentOpen(true);
+    } catch (err) {
+      console.error('[Reserve] Payment flow failed:', err);
+      const e = err as { response?: { data?: { error?: string } }; message?: string };
+      setReserveError(
+        e.response?.data?.error ?? e.message ?? 'Something went wrong. Please try again.',
+      );
+    }
   };
 
   const inputCls =
@@ -850,19 +894,33 @@ export default function HotelDetail() {
 
                         {/* Reserve Now */}
                         <button
-                          onClick={handleReserve}
-                          disabled={!selectedRoomId || !checkIn || !checkOut}
-                          className="w-full h-11 rounded-xl bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-navy-950 text-sm font-semibold transition-all hover:shadow-[0_0_20px_rgba(212,168,83,0.25)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
+                          onClick={() => void handleReserve()}
+                          disabled={!selectedRoomId || !checkIn || !checkOut || isReserveLoading}
+                          className="w-full h-11 rounded-xl bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-navy-950 text-sm font-semibold transition-all hover:shadow-[0_0_20px_rgba(212,168,83,0.25)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
                         >
-                          {!selectedRoomId
-                            ? 'Select a Room'
-                            : !checkIn || !checkOut
-                              ? 'Choose Dates'
-                              : user
-                                ? 'Reserve Now'
-                                : 'Sign in to Reserve'}
+                          {isReserveLoading ? (
+                            <>
+                              <Loader2 size={15} className="animate-spin" />
+                              {isCreatingBooking ? 'Creating reservation…' : 'Preparing payment…'}
+                            </>
+                          ) : !selectedRoomId ? (
+                            'Select a Room'
+                          ) : !checkIn || !checkOut ? (
+                            'Choose Dates'
+                          ) : user ? (
+                            'Reserve Now'
+                          ) : (
+                            'Sign in to Reserve'
+                          )}
                         </button>
                       </div>
+
+                      {/* Reserve error */}
+                      {reserveError && (
+                        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5">
+                          {reserveError}
+                        </p>
+                      )}
 
                       <p className="text-[11px] text-center text-warm-400">
                         No charge until check-in · Free cancellation
@@ -888,6 +946,23 @@ export default function HotelDetail() {
           />
         )}
       </AnimatePresence>
+
+      {/* ── Payment modal ──────────────────────────────────────────── */}
+      {paymentData && (
+        <PaymentModal
+          open={paymentOpen}
+          onClose={() => setPaymentOpen(false)}
+          clientSecret={paymentData.clientSecret}
+          amountCents={paymentData.amountCents}
+          onSuccess={() => {
+            setPaymentOpen(false);
+            setPaymentData(null);
+            setBookingSuccess(true);
+            queryClient.invalidateQueries({ queryKey: ['bookings'] });
+            queryClient.invalidateQueries({ queryKey: ['traveller-stats'] });
+          }}
+        />
+      )}
     </>
   );
 }

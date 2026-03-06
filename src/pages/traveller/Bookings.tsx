@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarCheck, MapPin, Clock, ChevronRight, X, Search } from 'lucide-react';
 import { useBookings, useCancelBooking } from '@/hooks/useBookings';
+import { useTripStore } from '@/stores/tripStore';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -23,12 +24,18 @@ export default function Bookings() {
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  const { data: bookings, isLoading } = useBookings(activeTab === 'all' ? undefined : activeTab);
+  const { data: bookings, isLoading, isError, error } = useBookings(activeTab === 'all' ? undefined : activeTab);
   const { mutate: cancelBooking, isPending } = useCancelBooking();
+  const { removeItem } = useTripStore();
 
   const handleCancel = (id: string) => {
+    const booking = bookings?.find((b) => b.id === id);
     cancelBooking(id, {
-      onSuccess: () => setCancellingId(null),
+      onSuccess: () => {
+        setCancellingId(null);
+        // Remove from trip planner so the hotel no longer shows as "Added"
+        if (booking?.propertyId) removeItem(booking.propertyId);
+      },
     });
   };
 
@@ -67,6 +74,12 @@ export default function Bookings() {
       </div>
 
       {/* Content */}
+      {isError && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 text-sm text-red-700">
+          Failed to load bookings:{' '}
+          {error instanceof Error ? error.message : 'Unknown error'}
+        </div>
+      )}
       {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => <BookingCardSkeleton key={i} />)}
