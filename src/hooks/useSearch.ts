@@ -129,7 +129,7 @@ export function useHotelDetail(propertyId: string) {
           id: h.id,
           hostId: '',
           name: h.name,
-          description: '',
+          description: (data.description as string) ?? '',
           city: h.city,
           country: h.country,
           address: '',

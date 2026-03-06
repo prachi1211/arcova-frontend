@@ -60,15 +60,14 @@ const POLICIES = [
   { label: 'Smoking', value: 'Non-smoking throughout' },
 ];
 
-// Realistic mock review data per property
-const MOCK_REVIEWS: Record<string, { count: number; avg: number }> = {
-  'prop-1': { count: 312, avg: 4.9 },
-  'prop-2': { count: 189, avg: 4.8 },
-  'prop-3': { count: 97, avg: 4.9 },
-  'prop-4': { count: 241, avg: 4.7 },
-  'prop-5': { count: 163, avg: 4.8 },
-  'prop-6': { count: 78, avg: 4.6 },
-};
+// Generate consistent fake review data from property ID hash
+function getReviews(id: string): { count: number; avg: number } {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) & 0xffffffff;
+  const count = 50 + (Math.abs(h) % 300);
+  const avg = +(4.5 + (Math.abs(h) % 5) / 10).toFixed(1);
+  return { count, avg };
+}
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -80,12 +79,14 @@ function GalleryLightbox({
   onClose,
   onPrev,
   onNext,
+  onJump,
 }: {
   images: string[];
   index: number;
   onClose: () => void;
   onPrev: () => void;
   onNext: () => void;
+  onJump?: (i: number) => void;
 }) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -163,8 +164,7 @@ function GalleryLightbox({
             key={i}
             onClick={(e) => {
               e.stopPropagation();
-              // parent controls index via onPrev/onNext; emit via a direct call isn't available
-              // so we just close and reopen isn't ideal — keep thumbnail as visual indicator only
+              onJump?.(i);
             }}
             className={cn(
               'w-12 h-8 rounded-md overflow-hidden border-2 transition-all flex-shrink-0',
@@ -307,10 +307,9 @@ export default function HotelDetail() {
   const nights = checkIn && checkOut ? Math.max(0, nightsBetween(checkIn, checkOut)) : 0;
   const pricePerNight = selectedRoom?.basePriceCents ?? effectivePriceCents;
   const subtotal = nights > 0 && selectedRoomId ? nights * pricePerNight : 0;
-  const taxes = Math.round(subtotal * 0.15);
-  const total = subtotal + taxes;
+  const total = subtotal;
 
-  const reviews = MOCK_REVIEWS[property.id] ?? { count: 124, avg: 4.7 };
+  const reviews = getReviews(property.id);
   const maxGuests = Math.max(...availableRoomTypes.map((r) => r.maxGuests), 2);
   const lowestPrice = Math.min(...availableRoomTypes.map((r) => r.basePriceCents));
 
@@ -337,7 +336,7 @@ export default function HotelDetail() {
 
   const handleReserve = async () => {
     if (!user) {
-      navigate(`/auth/login?redirect=${encodeURIComponent(`/traveller/hotel/${id}`)}`);
+      navigate(`/auth/login?redirect=${encodeURIComponent(`/hotel/${id}`)}`);
       return;
     }
     setReserveError('');
@@ -704,9 +703,6 @@ export default function HotelDetail() {
                         {checkIn} → {checkOut} · {nights} night{nights !== 1 ? 's' : ''}
                       </p>
                     )}
-                    <p className="text-xs text-warm-400 mb-6">
-                      A confirmation has been sent to your email.
-                    </p>
                     <div className="space-y-2.5">
                       <Link
                         to="/traveller/bookings"
@@ -800,7 +796,10 @@ export default function HotelDetail() {
                             onChange={(e) => setGuests(parseInt(e.target.value))}
                             className={`${inputCls} pl-8 appearance-none`}
                           >
-                            {[1, 2, 3, 4, 5, 6].map((n) => (
+                            {Array.from(
+                              { length: selectedRoom?.maxGuests ?? maxGuests },
+                              (_, i) => i + 1,
+                            ).map((n) => (
                               <option key={n} value={n}>
                                 {n} {n === 1 ? 'Guest' : 'Guests'}
                               </option>
@@ -855,12 +854,8 @@ export default function HotelDetail() {
                                 </span>
                                 <span>{formatCurrency(subtotal)}</span>
                               </div>
-                              <div className="flex justify-between text-warm-600">
-                                <span>Taxes &amp; fees (~15%)</span>
-                                <span>{formatCurrency(taxes)}</span>
-                              </div>
                               <div className="flex justify-between font-bold text-navy-950 pt-2 border-t border-warm-200">
-                                <span>Estimated total</span>
+                                <span>Total</span>
                                 <span>{formatCurrency(total)}</span>
                               </div>
                             </div>
@@ -923,7 +918,7 @@ export default function HotelDetail() {
                       )}
 
                       <p className="text-[11px] text-center text-warm-400">
-                        No charge until check-in · Free cancellation
+                        Secure payment · Free cancellation up to 48h
                       </p>
                     </div>
                   </motion.div>
@@ -943,6 +938,7 @@ export default function HotelDetail() {
             onClose={() => setGalleryOpen(false)}
             onPrev={prevImage}
             onNext={nextImage}
+            onJump={setGalleryIndex}
           />
         )}
       </AnimatePresence>

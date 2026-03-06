@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80';
 import { CalendarCheck, MapPin, Clock, ChevronRight, X, Search } from 'lucide-react';
 import { useBookings, useCancelBooking } from '@/hooks/useBookings';
 import { useTripStore } from '@/stores/tripStore';
@@ -95,7 +97,8 @@ export default function Bookings() {
                 {/* Image */}
                 <div className="shrink-0 w-20 md:w-28 h-16 md:h-24 rounded-xl overflow-hidden">
                   <img
-                    src={booking.property?.thumbnailUrl}
+                    src={booking.property?.thumbnailUrl || FALLBACK_IMAGE}
+                    onError={(e) => { (e.target as HTMLImageElement).src = FALLBACK_IMAGE; }}
                     alt={booking.property?.name}
                     className="w-full h-full object-cover"
                   />
@@ -149,7 +152,7 @@ export default function Bookings() {
                     </button>
                   )}
                   <Link
-                    to={`/traveller/hotel/${booking.propertyId}`}
+                    to={`/hotel/${booking.propertyId}`}
                     className="text-xs font-medium text-navy-950 flex items-center gap-1 px-3 py-1.5 rounded-lg border border-warm-200 hover:bg-warm-50 transition-colors"
                   >
                     View hotel <ChevronRight size={12} />
