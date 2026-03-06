@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 import type { UserRole } from '@/stores/authStore';
 
@@ -45,17 +46,19 @@ export default function Login() {
       if (error) throw error;
 
       const session = authData.session!;
-      const meta = session.user.user_metadata;
-      // Role comes from user_metadata set at signup.
-      // TODO: Fetch from profiles table once DB is live.
-      const role: UserRole = (meta?.role as UserRole) ?? 'traveller';
+
+      // Fetch role and profile from the profiles table via backend
+      const { data: profile } = await api.get('/auth/me', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const role: UserRole = (profile.role as UserRole) ?? 'traveller';
 
       setAuth(
         {
           id: session.user.id,
           email: session.user.email!,
           role,
-          fullName: meta?.full_name as string | undefined,
+          fullName: profile.full_name as string | undefined,
         },
         session.access_token,
       );
