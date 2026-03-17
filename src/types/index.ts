@@ -33,6 +33,7 @@ export interface Property {
   status: PropertyStatus;
   basePriceCents: number;
   totalRooms: number;
+  rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -211,6 +212,7 @@ export interface Review {
   comment?: string;
   createdAt: string;
   traveller?: Pick<User, 'id' | 'fullName' | 'avatarUrl'>;
+  hostResponse?: string;
 }
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
@@ -221,6 +223,46 @@ export interface PaginatedResponse<T> {
   page: number;
   pageSize: number;
   hasNextPage: boolean;
+}
+
+// ─── Admin ───────────────────────────────────────────────────────────────────
+
+export interface AdminProperty {
+  id: string;
+  name: string;
+  city: string;
+  country: string;
+  status: PropertyStatus;
+  starRating: number | null;
+  totalRooms: number;
+  rejectionReason: string | null;
+  createdAt: string;
+  host: { id: string; fullName: string | null; email: string } | null;
+}
+
+export interface AdminBooking {
+  id: string;
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  totalPriceCents: number;
+  status: string;
+  bookedAt: string;
+  traveller: { id: string; fullName: string | null; email: string } | null;
+  property: { id: string; name: string; city: string } | null;
+}
+
+export interface PlatformStats {
+  totalUsers: number;
+  totalHosts: number;
+  totalTravellers: number;
+  totalProperties: number;
+  pendingProperties: number;
+  activeProperties: number;
+  inactiveProperties: number;
+  totalBookings: number;
+  confirmedBookings: number;
+  totalRevenueCents: number;
 }
 
 // ─── API Error ───────────────────────────────────────────────────────────────

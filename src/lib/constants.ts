@@ -9,6 +9,7 @@ import {
   Tag,
   CalendarDays,
   Users,
+  Star,
 } from 'lucide-react';
 import type { BookingStatus, PropertyStatus } from '@/types';
 
@@ -32,6 +33,7 @@ export const HOST_NAV: NavItem[] = [
   { label: 'Analytics', href: '/host/analytics', icon: BarChart3 },
   { label: 'Pricing', href: '/host/pricing', icon: Tag },
   { label: 'Availability', href: '/host/availability', icon: CalendarDays },
+  { label: 'Reviews', href: '/host/reviews', icon: Star },
 ];
 
 export const ADMIN_NAV: NavItem[] = [

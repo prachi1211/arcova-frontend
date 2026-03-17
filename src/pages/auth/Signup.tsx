@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, Loader2, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 
 const schema = z
@@ -49,40 +49,23 @@ export default function Signup() {
   const onSubmit = async (data: FormData) => {
     setServerError('');
     try {
-      const { data: authData, error } = await supabase.auth.signUp({
+      const response = await api.post('/auth/signup', {
         email: data.email,
         password: data.password,
-        options: {
-          data: { full_name: data.fullName, role: data.role },
-        },
+        full_name: data.fullName,
+        role: data.role,
       });
-      if (error) throw error;
 
-      console.log('[Signup] authData:', { user: authData.user?.id, session: !!authData.session });
+      const { user, session, profile } = response.data;
 
-      // Get session — either returned directly or by signing in immediately after
-      let session = authData.session;
-      if (!session) {
-        console.log('[Signup] No session from signUp — attempting signInWithPassword');
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email: data.email,
-          password: data.password,
-        });
-        console.log('[Signup] signIn result:', { session: !!signInData.session, error: signInError?.message });
-        if (signInError) {
-          setServerError(`Sign-in failed: ${signInError.message}`);
-          return;
-        }
-        session = signInData.session;
-      }
-
-      if (session) {
+      if (session?.access_token) {
         setAuth(
-          { id: session.user.id, email: session.user.email!, role: data.role, fullName: data.fullName },
+          { id: user.id, email: user.email, role: user.role, fullName: profile?.full_name ?? data.fullName },
           session.access_token,
         );
-        navigate(data.role === 'traveller' ? '/traveller' : '/host');
+        navigate(user.role === 'traveller' ? '/traveller' : '/host');
       } else {
+        // Email confirmation required
         setEmailSent(true);
       }
     } catch (err: unknown) {

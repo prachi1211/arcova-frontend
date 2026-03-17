@@ -19,9 +19,10 @@ const ROLE_LABEL: Record<UserRole, string> = {
 
 interface SidebarProps {
   role: UserRole;
+  badgeCounts?: Record<string, number>;
 }
 
-export function Sidebar({ role }: SidebarProps) {
+export function Sidebar({ role, badgeCounts = {} }: SidebarProps) {
   const { user, logout } = useAuthStore();
   const { sidebarOpen, setSidebarOpen } = useUiStore();
   const navItems = NAV_MAP[role];
@@ -78,24 +79,32 @@ export function Sidebar({ role }: SidebarProps) {
 
         {/* Navigation */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {navItems.map(({ label, href, icon: Icon }) => (
-            <NavLink
-              key={href}
-              to={href}
-              end={href === `/${role}`}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group',
-                  isActive
-                    ? 'bg-gold-500/10 text-gold-400 border-l-[3px] border-gold-500 pl-[calc(0.75rem-3px)]'
-                    : 'text-white/60 hover:bg-white/5 hover:text-white/90 border-l-[3px] border-transparent pl-[calc(0.75rem-3px)]',
-                )
-              }
-            >
-              <Icon size={17} className="shrink-0" />
-              {label}
-            </NavLink>
-          ))}
+          {navItems.map(({ label, href, icon: Icon }) => {
+            const badge = badgeCounts[href];
+            return (
+              <NavLink
+                key={href}
+                to={href}
+                end={href === `/${role}`}
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group',
+                    isActive
+                      ? 'bg-gold-500/10 text-gold-400 border-l-[3px] border-gold-500 pl-[calc(0.75rem-3px)]'
+                      : 'text-white/60 hover:bg-white/5 hover:text-white/90 border-l-[3px] border-transparent pl-[calc(0.75rem-3px)]',
+                  )
+                }
+              >
+                <Icon size={17} className="shrink-0" />
+                <span className="flex-1">{label}</span>
+                {badge != null && badge > 0 && (
+                  <span className="ml-auto min-w-[20px] h-5 px-1.5 rounded-full bg-gold-500 text-navy-950 text-[11px] font-bold flex items-center justify-center">
+                    {badge > 99 ? '99+' : badge}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* User footer */}
