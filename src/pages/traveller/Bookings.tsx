@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80';
-import { CalendarCheck, MapPin, Clock, ChevronRight, X, Search } from 'lucide-react';
+import { CalendarCheck, MapPin, Clock, ChevronRight, X, Search, Star, MessageSquare } from 'lucide-react';
 import { useBookings, useCancelBooking } from '@/hooks/useBookings';
+import { useCreateReview } from '@/hooks/useReviews';
 import { useTripStore } from '@/stores/tripStore';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -22,9 +23,125 @@ const TABS: { key: FilterTab; label: string }[] = [
   { key: 'cancelled', label: 'Cancelled' },
 ];
 
+// ─── Review Modal ─────────────────────────────────────────────────────────────
+
+function ReviewModal({
+  bookingId,
+  propertyName,
+  onClose,
+}: {
+  bookingId: string;
+  propertyName: string;
+  onClose: () => void;
+}) {
+  const [rating, setRating] = useState(0);
+  const [hovered, setHovered] = useState(0);
+  const [comment, setComment] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const { mutate: createReview, isPending, error } = useCreateReview();
+
+  const handleSubmit = () => {
+    if (rating === 0) return;
+    createReview(
+      { booking_id: bookingId, rating, comment: comment.trim() || undefined },
+      {
+        onSuccess: () => setSubmitted(true),
+      },
+    );
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-navy-950/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+        {submitted ? (
+          <div className="text-center py-2">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+              <Star size={20} className="text-emerald-600 fill-emerald-600" />
+            </div>
+            <h3 className="font-heading text-lg font-semibold text-navy-950 mb-1">Review Submitted</h3>
+            <p className="text-sm text-warm-500 mb-5">Thank you for sharing your experience.</p>
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 rounded-xl bg-navy-950 text-white text-sm font-medium hover:bg-navy-800 transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        ) : (
+          <>
+            <button onClick={onClose} className="absolute top-4 right-4 text-warm-400 hover:text-warm-600">
+              <X size={16} />
+            </button>
+            <div className="flex items-center gap-2 mb-4">
+              <MessageSquare size={18} className="text-gold-500" />
+              <h3 className="font-heading text-base font-semibold text-navy-950">
+                Review {propertyName}
+              </h3>
+            </div>
+
+            {/* Star rating */}
+            <div className="flex items-center gap-1 mb-4">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  onMouseEnter={() => setHovered(n)}
+                  onMouseLeave={() => setHovered(0)}
+                  onClick={() => setRating(n)}
+                  className="p-0.5 transition-transform hover:scale-110"
+                >
+                  <Star
+                    size={24}
+                    className={cn(
+                      'transition-colors',
+                      n <= (hovered || rating)
+                        ? 'fill-gold-400 text-gold-400'
+                        : 'text-warm-200',
+                    )}
+                  />
+                </button>
+              ))}
+              {rating > 0 && (
+                <span className="text-sm text-warm-500 ml-2">
+                  {['', 'Poor', 'Fair', 'Good', 'Very good', 'Excellent'][rating]}
+                </span>
+              )}
+            </div>
+
+            <textarea
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              rows={3}
+              placeholder="Share what you loved (optional)…"
+              className="w-full rounded-xl border border-warm-200 bg-white px-3 py-2.5 text-sm text-navy-950 outline-none resize-none focus:border-gold-500 focus:ring-2 focus:ring-gold-500/15 transition-all"
+            />
+
+            {error && (
+              <p className="text-xs text-red-600 mt-2">
+                {error instanceof Error ? error.message : 'Failed to submit review'}
+              </p>
+            )}
+
+            <button
+              onClick={handleSubmit}
+              disabled={rating === 0 || isPending}
+              className="w-full mt-3 py-2.5 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPending ? 'Submitting…' : 'Submit Review'}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
+
 export default function Bookings() {
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [reviewingBooking, setReviewingBooking] = useState<{ id: string; propertyName: string } | null>(null);
 
   const { data: bookings, isLoading, isError, error } = useBookings(activeTab === 'all' ? undefined : activeTab);
   const { mutate: cancelBooking, isPending } = useCancelBooking();
@@ -35,7 +152,6 @@ export default function Bookings() {
     cancelBooking(id, {
       onSuccess: () => {
         setCancellingId(null);
-        // Remove from trip planner so the hotel no longer shows as "Added"
         if (booking?.propertyId) removeItem(booking.propertyId);
       },
     });
@@ -143,6 +259,14 @@ export default function Bookings() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {booking.status === 'completed' && (
+                    <button
+                      onClick={() => setReviewingBooking({ id: booking.id, propertyName: booking.property?.name ?? 'this property' })}
+                      className="text-xs text-gold-600 hover:text-gold-500 font-medium transition-colors flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-gold-50"
+                    >
+                      <Star size={12} /> Leave a review
+                    </button>
+                  )}
                   {booking.status === 'confirmed' && (() => {
                     const hoursUntilCheckIn = (new Date(booking.checkIn).getTime() - Date.now()) / (1000 * 60 * 60);
                     return hoursUntilCheckIn >= 48 ? (
@@ -214,6 +338,15 @@ export default function Bookings() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Review Modal */}
+      {reviewingBooking && (
+        <ReviewModal
+          bookingId={reviewingBooking.id}
+          propertyName={reviewingBooking.propertyName}
+          onClose={() => setReviewingBooking(null)}
+        />
       )}
     </div>
   );

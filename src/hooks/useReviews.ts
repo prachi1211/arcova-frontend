@@ -57,6 +57,23 @@ export function usePropertyReviews(propertyId: string, params?: { page?: number;
   });
 }
 
+export function useCreateReview() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      booking_id: string;
+      rating: number;
+      comment?: string;
+    }): Promise<Review> => {
+      const { data } = await api.post('/reviews', input);
+      return toReview(data as RawReview);
+    },
+    onSuccess: (review) => {
+      qc.invalidateQueries({ queryKey: ['reviews', review.propertyId] });
+    },
+  });
+}
+
 export function useRespondToReview() {
   const qc = useQueryClient();
   return useMutation({

@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useHotelDetail } from '@/hooks/useSearch';
 import { useCreateBooking, useCreatePaymentIntent } from '@/hooks/useBookings';
+import { usePropertyReviews } from '@/hooks/useReviews';
 import { useAuthStore } from '@/stores/authStore';
 import { useTripStore, type TripItem } from '@/stores/tripStore';
 import { PaymentModal } from '@/components/traveller/PaymentModal';
@@ -59,15 +60,6 @@ const POLICIES = [
   { label: 'Pets', value: 'No pets allowed' },
   { label: 'Smoking', value: 'Non-smoking throughout' },
 ];
-
-// Generate consistent fake review data from property ID hash
-function getReviews(id: string): { count: number; avg: number } {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) & 0xffffffff;
-  const count = 50 + (Math.abs(h) % 300);
-  const avg = +(4.5 + (Math.abs(h) % 5) / 10).toFixed(1);
-  return { count, avg };
-}
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -223,6 +215,7 @@ export default function HotelDetail() {
   const { user } = useAuthStore();
   const { addItem, setPendingItem, setShowAuthGate, isInTrip } = useTripStore();
   const { data, isLoading } = useHotelDetail(id ?? '');
+  const { data: reviewsData } = usePropertyReviews(id ?? '', { limit: 5 });
   const { mutateAsync: createBookingAsync, isPending: isCreatingBooking } = useCreateBooking();
   const { mutateAsync: createIntentAsync, isPending: isCreatingIntent } = useCreatePaymentIntent();
 
@@ -309,7 +302,10 @@ export default function HotelDetail() {
   const subtotal = nights > 0 && selectedRoomId ? nights * pricePerNight : 0;
   const total = subtotal;
 
-  const reviews = getReviews(property.id);
+  const reviewCount = reviewsData?.totalCount ?? 0;
+  const reviewAvg = reviewCount > 0
+    ? +(reviewsData!.results.reduce((s, r) => s + r.rating, 0) / reviewsData!.results.length).toFixed(1)
+    : null;
   const maxGuests = Math.max(...availableRoomTypes.map((r) => r.maxGuests), 2);
   const lowestPrice = Math.min(...availableRoomTypes.map((r) => r.basePriceCents));
   // Mock hotels have non-UUID IDs (e.g. 'mock-hotel-paris-0') — cannot be booked
@@ -495,8 +491,14 @@ export default function HotelDetail() {
             </div>
             <span className="text-warm-300">·</span>
             {/* Rating */}
-            <span className="font-semibold text-navy-950">{reviews.avg}</span>
-            <span className="text-warm-500">({reviews.count} reviews)</span>
+            {reviewAvg !== null ? (
+              <>
+                <span className="font-semibold text-navy-950">{reviewAvg}</span>
+                <span className="text-warm-500">({reviewCount} review{reviewCount !== 1 ? 's' : ''})</span>
+              </>
+            ) : (
+              <span className="text-warm-400">No reviews yet</span>
+            )}
             <span className="text-warm-300">·</span>
             {/* Location */}
             <span className="flex items-center gap-1 text-warm-600">
@@ -667,6 +669,46 @@ export default function HotelDetail() {
                 ))}
               </div>
             </div>
+            {/* Guest Reviews */}
+            {reviewCount > 0 && (
+              <div className="bg-white rounded-2xl border border-warm-200 p-6 shadow-sm">
+                <h2 className="font-heading text-lg font-semibold text-navy-950 mb-5">
+                  Guest Reviews
+                  {reviewAvg !== null && (
+                    <span className="ml-2 text-sm font-normal text-warm-500">
+                      {reviewAvg} · {reviewCount} review{reviewCount !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </h2>
+                <div className="space-y-4">
+                  {reviewsData?.results.map((review) => (
+                    <div key={review.id} className="border-b border-warm-100 last:border-0 pb-4 last:pb-0">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              size={12}
+                              className={i < review.rating ? 'fill-gold-400 text-gold-400' : 'text-warm-200'}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-warm-400">{new Date(review.createdAt).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}</span>
+                      </div>
+                      {review.comment && (
+                        <p className="text-sm text-warm-700 leading-relaxed">{review.comment}</p>
+                      )}
+                      {review.hostResponse && (
+                        <div className="mt-2 pl-3 border-l-2 border-gold-300">
+                          <p className="text-xs font-semibold text-navy-950 mb-0.5">Host response</p>
+                          <p className="text-xs text-warm-600">{review.hostResponse}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* RIGHT — booking widget */}
