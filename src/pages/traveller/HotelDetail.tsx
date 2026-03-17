@@ -707,6 +707,12 @@ export default function HotelDetail() {
                     )}
                     <div className="space-y-2.5">
                       <Link
+                        to="/traveller/assistant"
+                        className="flex items-center justify-center w-full h-11 rounded-xl bg-gold-500 hover:bg-gold-400 text-navy-950 text-sm font-semibold transition-all hover:shadow-[0_0_20px_rgba(212,168,83,0.25)]"
+                      >
+                        Plan this trip with AI
+                      </Link>
+                      <Link
                         to="/traveller/bookings"
                         className="flex items-center justify-center w-full h-11 rounded-xl bg-navy-950 text-white text-sm font-semibold hover:bg-navy-800 transition-colors"
                       >
@@ -897,6 +903,14 @@ export default function HotelDetail() {
                                 </>
                               )}
                             </button>
+                            {inTrip && (
+                              <Link
+                                to="/traveller/assistant"
+                                className="flex items-center justify-center w-full h-9 rounded-xl bg-navy-950 text-white text-xs font-semibold hover:bg-navy-800 transition-colors"
+                              >
+                                Plan this trip with AI →
+                              </Link>
+                            )}
 
                             {/* Reserve Now */}
                             <button
@@ -971,6 +985,7 @@ export default function HotelDetail() {
             setBookingSuccess(true);
             queryClient.invalidateQueries({ queryKey: ['bookings'] });
             queryClient.invalidateQueries({ queryKey: ['traveller-stats'] });
+            queryClient.invalidateQueries({ queryKey: ['search', 'hotel', id] });
           }}
         />
       )}

@@ -143,14 +143,19 @@ export default function Bookings() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {booking.status === 'confirmed' && (
-                    <button
-                      onClick={() => setCancellingId(booking.id)}
-                      className="text-xs text-red-500 hover:text-red-600 font-medium transition-colors flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-red-50"
-                    >
-                      <X size={12} /> Cancel
-                    </button>
-                  )}
+                  {booking.status === 'confirmed' && (() => {
+                    const hoursUntilCheckIn = (new Date(booking.checkIn).getTime() - Date.now()) / (1000 * 60 * 60);
+                    return hoursUntilCheckIn >= 48 ? (
+                      <button
+                        onClick={() => setCancellingId(booking.id)}
+                        className="text-xs text-red-500 hover:text-red-600 font-medium transition-colors flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-red-50"
+                      >
+                        <X size={12} /> Cancel
+                      </button>
+                    ) : (
+                      <span className="text-xs text-warm-400 px-3 py-1.5">Cancellation closed</span>
+                    );
+                  })()}
                   <Link
                     to={`/hotel/${booking.propertyId}`}
                     className="text-xs font-medium text-navy-950 flex items-center gap-1 px-3 py-1.5 rounded-lg border border-warm-200 hover:bg-warm-50 transition-colors"

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { Sparkles, Send, User, MapPin, Plane, Hotel, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
+import { useTripStore } from '@/stores/tripStore';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -226,6 +227,7 @@ function TripPlanPanel({ plan }: { plan: TripPlan }) {
 
 export default function Assistant() {
   const { token } = useAuthStore();
+  const { items: tripItems } = useTripStore();
   const [messages, setMessages] = useState<Message[]>([]);
   const [tripPlan, setTripPlan] = useState<TripPlan | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -235,6 +237,7 @@ export default function Assistant() {
   const [isInitialising, setIsInitialising] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const prefillDone = useRef(false);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -250,6 +253,21 @@ export default function Assistant() {
       .catch(() => setSessionError('Could not connect to the AI assistant. Please refresh and try again.'))
       .finally(() => setIsInitialising(false));
   }, [token]);
+
+  // Pre-populate input with trip context once session is ready
+  useEffect(() => {
+    if (!sessionId || prefillDone.current) return;
+    const hotels = tripItems.filter((i) => i.type === 'hotel');
+    if (hotels.length === 0) return;
+    prefillDone.current = true;
+    const names = hotels.map((h) => `${h.name} (${h.subtitle.split(' · ')[0]})`).join(', ');
+    const prompt =
+      hotels.length === 1
+        ? `I've added ${names} to my trip. Help me plan my stay — what should I do, see, and eat nearby?`
+        : `I've added these hotels to my trip: ${names}. Help me plan a multi-destination itinerary.`;
+    setInput(prompt);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }, [sessionId, tripItems]);
 
   const sendMessage = useCallback(
     (content: string) => {
