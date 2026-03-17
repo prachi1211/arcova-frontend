@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
+import type { Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Edit2, Plus, Loader2, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Edit2, Plus, Loader2, X, ChevronUp } from 'lucide-react';
 import { useProperty, useUpdateProperty, useCreateRoomType, useUpdateRoomType } from '@/hooks/useProperties';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatusBadge } from '@/components/shared/StatusBadge';
@@ -52,7 +53,7 @@ function RoomCard({ room, propertyId }: { room: RoomType; propertyId: string }) 
   const { mutateAsync: updateRoom } = useUpdateRoomType();
 
   const form = useForm<RoomFormData>({
-    resolver: zodResolver(roomSchema),
+    resolver: zodResolver(roomSchema) as Resolver<RoomFormData>,
     defaultValues: {
       name: room.name,
       description: room.description,
@@ -176,19 +177,9 @@ function AddRoomForm({ propertyId, onDone }: { propertyId: string; onDone: () =>
   const [error, setError] = useState('');
 
   const form = useForm<RoomFormData>({
-    resolver: zodResolver(roomSchema),
+    resolver: zodResolver(roomSchema) as Resolver<RoomFormData>,
     defaultValues: { max_guests: 2, total_inventory: 1, base_price_dollars: 0, amenities: [] },
   });
-
-  const selectedAmenities = form.watch('amenities');
-  const toggleAmenity = (key: string) => {
-    const current = selectedAmenities ?? [];
-    if (current.includes(key)) {
-      form.setValue('amenities', current.filter((a) => a !== key));
-    } else {
-      form.setValue('amenities', [...current, key]);
-    }
-  };
 
   const onSubmit = async (data: RoomFormData) => {
     setError('');
@@ -264,7 +255,7 @@ export default function PropertyDetail() {
   const [showAddRoom, setShowAddRoom] = useState(false);
 
   const form = useForm<PropertyFormData>({
-    resolver: zodResolver(propertySchema),
+    resolver: zodResolver(propertySchema) as Resolver<PropertyFormData>,
     values: property
       ? {
           name: property.name,

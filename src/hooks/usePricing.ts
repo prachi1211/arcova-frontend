@@ -99,7 +99,7 @@ export function useUpdatePricingRule() {
 export function useDeletePricingRule() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, roomTypeId }: { id: string; roomTypeId: string }): Promise<void> => {
+    mutationFn: async ({ id, roomTypeId: _roomTypeId }: { id: string; roomTypeId: string }): Promise<void> => {
       await api.delete(`/pricing/rules/${id}`);
     },
     onSuccess: (_, vars) => {

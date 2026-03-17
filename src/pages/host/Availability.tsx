@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { addMonths, subMonths, startOfMonth, endOfMonth, format, eachDayOfInterval, getDay, startOfDay } from 'date-fns';
 import { useProperties } from '@/hooks/useProperties';
 import { useProperty } from '@/hooks/useProperties';

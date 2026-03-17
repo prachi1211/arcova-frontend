@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
+import type { Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { ArrowLeft, ArrowRight, Plus, X, Loader2, BedDouble, Trash2, CheckCircle2 } from 'lucide-react';
@@ -77,7 +78,7 @@ export default function NewProperty() {
     getValues,
     formState: { errors },
   } = useForm<PropertyFormData>({
-    resolver: zodResolver(propertySchema),
+    resolver: zodResolver(propertySchema) as Resolver<PropertyFormData>,
     defaultValues: { amenities: [], images: [{ url: '' }], total_rooms: 1 },
   });
 
