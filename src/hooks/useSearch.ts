@@ -47,6 +47,7 @@ interface BackendRoomType {
   maxGuests: number;
   pricePerNight: number;
   amenities: string[];
+  availableRooms: number;
 }
 
 // ─── Map backend hotel → frontend SearchResult ────────────────────────────────
@@ -149,7 +150,7 @@ export function useHotelDetail(propertyId: string) {
           name: rt.name,
           description: '',
           maxGuests: rt.maxGuests,
-          totalRooms: h.availableRooms,
+          totalRooms: rt.availableRooms ?? h.availableRooms,
           basePriceCents: Math.round(rt.pricePerNight * 100),
           amenities: rt.amenities,
           imageUrls: [],
