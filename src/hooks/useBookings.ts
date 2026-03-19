@@ -177,15 +177,9 @@ export function useCreatePaymentIntent() {
 export function useTravellerStats() {
   return useQuery({
     queryKey: ['traveller-stats'],
-    queryFn: async () => {
-      const { data } = await api.get('/bookings', { params: { page: 0, limit: 50 } });
-      const bookings = (data.results as RawBooking[]).map(toBooking);
-      const upcoming = bookings.filter((b) => b.status === 'confirmed').length;
-      const total = data.totalCount as number;
-      const spent = bookings
-        .filter((b) => b.status !== 'cancelled')
-        .reduce((sum, b) => sum + b.totalPriceCents, 0);
-      return { upcoming, total, spent };
+    queryFn: async (): Promise<{ upcoming: number; total: number; spent: number }> => {
+      const { data } = await api.get('/bookings/traveller-stats');
+      return data as { upcoming: number; total: number; spent: number };
     },
   });
 }
