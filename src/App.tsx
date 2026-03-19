@@ -36,6 +36,10 @@ const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
 const AdminProperties = lazy(() => import('@/pages/admin/Properties'));
 const AdminUsers = lazy(() => import('@/pages/admin/Users'));
 const AdminBookings = lazy(() => import('@/pages/admin/Bookings'));
+const AdminSupport = lazy(() => import('@/pages/admin/Support'));
+
+const TravellerSupport = lazy(() => import('@/pages/traveller/Support'));
+const HostSupport = lazy(() => import('@/pages/host/Support'));
 
 // ─── Query client ─────────────────────────────────────────────────────────────
 const queryClient = new QueryClient({
@@ -87,6 +91,7 @@ function App() {
                 <Route path="/traveller" element={<TravellerDashboard />} />
                 <Route path="/traveller/bookings" element={<Bookings />} />
                 <Route path="/traveller/assistant" element={<Assistant />} />
+                <Route path="/traveller/support" element={<TravellerSupport />} />
               </Route>
             </Route>
 
@@ -102,6 +107,7 @@ function App() {
                 <Route path="/host/pricing" element={<Pricing />} />
                 <Route path="/host/availability" element={<Availability />} />
                 <Route path="/host/reviews" element={<Reviews />} />
+                <Route path="/host/support" element={<HostSupport />} />
               </Route>
             </Route>
 
@@ -112,6 +118,7 @@ function App() {
                 <Route path="/admin/properties" element={<AdminProperties />} />
                 <Route path="/admin/users" element={<AdminUsers />} />
                 <Route path="/admin/bookings" element={<AdminBookings />} />
+                <Route path="/admin/support" element={<AdminSupport />} />
               </Route>
             </Route>
           </Routes>

@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Users,
   Star,
+  HeadphonesIcon,
 } from 'lucide-react';
 import type { BookingStatus, PropertyStatus } from '@/types';
 
@@ -24,6 +25,7 @@ export const TRAVELLER_NAV: NavItem[] = [
   { label: 'Search Hotels', href: '/search', icon: Search },
   { label: 'My Bookings', href: '/traveller/bookings', icon: CalendarCheck },
   { label: 'AI Assistant', href: '/traveller/assistant', icon: Sparkles },
+  { label: 'Contact Support', href: '/traveller/support', icon: HeadphonesIcon },
 ];
 
 export const HOST_NAV: NavItem[] = [
@@ -34,6 +36,7 @@ export const HOST_NAV: NavItem[] = [
   { label: 'Pricing', href: '/host/pricing', icon: Tag },
   { label: 'Availability', href: '/host/availability', icon: CalendarDays },
   { label: 'Reviews', href: '/host/reviews', icon: Star },
+  { label: 'Contact Support', href: '/host/support', icon: HeadphonesIcon },
 ];
 
 export const ADMIN_NAV: NavItem[] = [
@@ -41,6 +44,7 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Users', href: '/admin/users', icon: Users },
   { label: 'Properties', href: '/admin/properties', icon: Building2 },
   { label: 'Bookings', href: '/admin/bookings', icon: CalendarCheck },
+  { label: 'Support', href: '/admin/support', icon: HeadphonesIcon },
 ];
 
 export const BOOKING_STATUS_STYLES: Record<BookingStatus, string> = {
