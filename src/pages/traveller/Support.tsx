@@ -1,22 +1,10 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { MessageSquarePlus, Clock, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { useMyTickets, useCreateTicket } from '@/hooks/useSupport';
-import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { SupportTicketStatus, SupportTicketPriority } from '@/types';
-
-const schema = z.object({
-  subject: z.string().min(3, 'Subject must be at least 3 characters').max(200),
-  message: z.string().min(10, 'Please describe your issue in more detail').max(5000),
-  priority: z.enum(['low', 'medium', 'high']).default('medium'),
-});
-type FormData = z.infer<typeof schema>;
 
 const STATUS_STYLES: Record<SupportTicketStatus, string> = {
   open: 'bg-blue-50 text-blue-700 border-blue-200',
@@ -41,31 +29,41 @@ const STATUS_ICONS: Record<SupportTicketStatus, typeof Clock> = {
 
 const PRIORITY_STYLES: Record<SupportTicketPriority, string> = {
   low: 'bg-slate-100 text-slate-600 border-slate-200',
-  medium: 'bg-gold-100 text-[#B8923F] border-gold-300',
+  medium: 'bg-amber-50 text-amber-700 border-amber-200',
   high: 'bg-red-50 text-red-600 border-red-200',
 };
 
+const INPUT_CLASS =
+  'w-full rounded-lg border border-[#E8E8E0] bg-white px-3 py-2 text-sm text-[#1A1A18] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D4A853] focus:border-transparent';
+
 export default function Support() {
-  const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [priority, setPriority] = useState<SupportTicketPriority>('medium');
+  const [submitting, setSubmitting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   const { data, isLoading } = useMyTickets();
   const createTicket = useCreateTicket();
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: { priority: 'medium' },
-  });
-
-  const onSubmit = async (values: FormData) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    if (subject.trim().length < 3) { setErrorMsg('Subject must be at least 3 characters.'); return; }
+    if (message.trim().length < 10) { setErrorMsg('Please describe your issue in more detail.'); return; }
+    setSubmitting(true);
     try {
-      await createTicket.mutateAsync(values);
-      toast({ title: 'Ticket submitted', description: 'Our team will get back to you shortly.' });
-      form.reset();
+      await createTicket.mutateAsync({ subject: subject.trim(), message: message.trim(), priority });
+      setSuccessMsg('Ticket submitted. Our team will get back to you shortly.');
+      setSubject(''); setMessage(''); setPriority('medium');
       setShowForm(false);
     } catch {
-      toast({ title: 'Failed to submit', description: 'Please try again.', variant: 'destructive' });
+      setErrorMsg('Failed to submit ticket. Please try again.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -73,103 +71,92 @@ export default function Support() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-playfair text-2xl font-semibold tracking-tight text-[#0A0F1E]">
-            Contact Support
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Have an issue? Our team is here to help.
-          </p>
+      <PageHeader
+        title="Contact Support"
+        description="Have an issue? Our team is here to help."
+        actions={
+          <button
+            onClick={() => { setShowForm((v) => !v); setSuccessMsg(''); setErrorMsg(''); }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#D4A853] hover:bg-[#E2BC6A] text-[#0A0F1E] text-sm font-medium transition-colors"
+          >
+            <MessageSquarePlus className="h-4 w-4" />
+            New Ticket
+          </button>
+        }
+      />
+
+      {successMsg && (
+        <div className="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+          <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+          {successMsg}
         </div>
-        <Button
-          onClick={() => setShowForm((v) => !v)}
-          className="bg-[#D4A853] hover:bg-[#E2BC6A] text-[#0A0F1E] font-medium"
-        >
-          <MessageSquarePlus className="h-4 w-4 mr-2" />
-          New Ticket
-        </Button>
-      </div>
-
-      {/* New ticket form */}
-      {showForm && (
-        <Card className="border border-[#E8E8E0] shadow-sm">
-          <CardHeader className="pb-4">
-            <CardTitle className="font-playfair text-lg font-semibold text-[#0A0F1E]">
-              Submit a Support Request
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-[#0A0F1E] mb-1">
-                  Subject <span className="text-red-500">*</span>
-                </label>
-                <input
-                  {...form.register('subject')}
-                  placeholder="Brief description of your issue"
-                  className="w-full rounded-md border border-[#E8E8E0] bg-white px-3 py-2 text-sm text-[#1A1A18] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D4A853] focus:border-transparent"
-                />
-                {form.formState.errors.subject && (
-                  <p className="mt-1 text-xs text-red-500">{form.formState.errors.subject.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[#0A0F1E] mb-1">
-                  Priority
-                </label>
-                <select
-                  {...form.register('priority')}
-                  className="w-full rounded-md border border-[#E8E8E0] bg-white px-3 py-2 text-sm text-[#1A1A18] focus:outline-none focus:ring-2 focus:ring-[#D4A853]"
-                >
-                  <option value="low">Low — general question</option>
-                  <option value="medium">Medium — something isn't working</option>
-                  <option value="high">High — urgent issue affecting my booking</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-[#0A0F1E] mb-1">
-                  Message <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  {...form.register('message')}
-                  rows={5}
-                  placeholder="Describe your issue in detail..."
-                  className="w-full rounded-md border border-[#E8E8E0] bg-white px-3 py-2 text-sm text-[#1A1A18] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D4A853] focus:border-transparent resize-none"
-                />
-                {form.formState.errors.message && (
-                  <p className="mt-1 text-xs text-red-500">{form.formState.errors.message.message}</p>
-                )}
-              </div>
-
-              <div className="flex gap-3 pt-1">
-                <Button
-                  type="submit"
-                  disabled={createTicket.isPending}
-                  className="bg-[#D4A853] hover:bg-[#E2BC6A] text-[#0A0F1E] font-medium"
-                >
-                  {createTicket.isPending ? 'Submitting...' : 'Submit Ticket'}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => { setShowForm(false); form.reset(); }}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
       )}
 
-      {/* Ticket history */}
-      <Card className="border border-[#E8E8E0] shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="font-playfair text-lg font-semibold text-[#0A0F1E]">
-            My Tickets
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      {showForm && (
+        <div className="rounded-xl border border-[#E8E8E0] bg-white shadow-sm p-6 space-y-4">
+          <h2 className="font-playfair text-lg font-semibold text-[#0A0F1E]">Submit a Support Request</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-[#0A0F1E] mb-1">
+                Subject <span className="text-red-500">*</span>
+              </label>
+              <input
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Brief description of your issue"
+                className={INPUT_CLASS}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#0A0F1E] mb-1">Priority</label>
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value as SupportTicketPriority)}
+                className={INPUT_CLASS}
+              >
+                <option value="low">Low — general question</option>
+                <option value="medium">Medium — something isn't working</option>
+                <option value="high">High — urgent issue affecting my booking</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[#0A0F1E] mb-1">
+                Message <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={5}
+                placeholder="Describe your issue in detail..."
+                className={cn(INPUT_CLASS, 'resize-none')}
+              />
+            </div>
+            {errorMsg && <p className="text-sm text-red-600">{errorMsg}</p>}
+            <div className="flex gap-3">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-5 py-2 rounded-lg bg-[#D4A853] hover:bg-[#E2BC6A] text-[#0A0F1E] text-sm font-medium transition-colors disabled:opacity-60"
+              >
+                {submitting ? 'Submitting...' : 'Submit Ticket'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowForm(false); setErrorMsg(''); }}
+                className="px-5 py-2 rounded-lg border border-[#E8E8E0] text-sm font-medium text-slate-600 hover:border-slate-400 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="rounded-xl border border-[#E8E8E0] bg-white shadow-sm">
+        <div className="px-6 py-4 border-b border-[#E8E8E0]">
+          <h2 className="font-playfair text-lg font-semibold text-[#0A0F1E]">My Tickets</h2>
+        </div>
+        <div className="p-4">
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
@@ -177,21 +164,18 @@ export default function Support() {
               ))}
             </div>
           ) : tickets.length === 0 ? (
-            <div className="text-center py-10">
-              <MessageSquarePlus className="h-8 w-8 mx-auto text-slate-300 mb-3" />
-              <p className="text-sm font-medium text-[#0A0F1E]">No tickets yet</p>
-              <p className="text-sm text-slate-500 mt-1">Submit a ticket above if you need help.</p>
-            </div>
+            <EmptyState
+              icon={MessageSquarePlus}
+              title="No tickets yet"
+              description="Submit a ticket above if you need help."
+            />
           ) : (
             <div className="space-y-2">
               {tickets.map((ticket) => {
                 const Icon = STATUS_ICONS[ticket.status];
                 const isExpanded = expandedId === ticket.id;
                 return (
-                  <div
-                    key={ticket.id}
-                    className="rounded-lg border border-[#E8E8E0] overflow-hidden"
-                  >
+                  <div key={ticket.id} className="rounded-lg border border-[#E8E8E0] overflow-hidden">
                     <button
                       className="w-full flex items-center gap-3 p-4 text-left hover:bg-[#FAFAF8] transition-colors"
                       onClick={() => setExpandedId(isExpanded ? null : ticket.id)}
@@ -208,12 +192,12 @@ export default function Support() {
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge className={cn('text-xs border', STATUS_STYLES[ticket.status])}>
+                        <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border', STATUS_STYLES[ticket.status])}>
                           {STATUS_LABELS[ticket.status]}
-                        </Badge>
-                        <Badge className={cn('text-xs border', PRIORITY_STYLES[ticket.priority])}>
+                        </span>
+                        <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border', PRIORITY_STYLES[ticket.priority])}>
                           {ticket.priority}
-                        </Badge>
+                        </span>
                         <ChevronDown className={cn('h-4 w-4 text-slate-400 transition-transform', isExpanded && 'rotate-180')} />
                       </div>
                     </button>
@@ -224,7 +208,7 @@ export default function Support() {
                           <p className="text-sm text-[#1A1A18] whitespace-pre-wrap">{ticket.message}</p>
                         </div>
                         {ticket.admin_notes && (
-                          <div className="rounded-md bg-[#D4A853]/10 border border-[#D4A853]/30 p-3">
+                          <div className="rounded-lg bg-[#D4A853]/10 border border-[#D4A853]/30 p-3">
                             <p className="text-xs font-medium text-[#B8923F] mb-1">Admin response</p>
                             <p className="text-sm text-[#1A1A18] whitespace-pre-wrap">{ticket.admin_notes}</p>
                           </div>
@@ -241,8 +225,8 @@ export default function Support() {
               })}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

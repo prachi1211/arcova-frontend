@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { AlertCircle, Clock, CheckCircle2, ChevronDown, User, Building2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { useAdminTickets, useUpdateTicket } from '@/hooks/useSupport';
-import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { SupportTicketStatus, SupportTicketPriority } from '@/types';
 
@@ -31,7 +29,7 @@ const STATUS_ICONS: Record<SupportTicketStatus, typeof Clock> = {
 
 const PRIORITY_STYLES: Record<SupportTicketPriority, string> = {
   low: 'bg-slate-100 text-slate-600 border-slate-200',
-  medium: 'bg-gold-100 text-[#B8923F] border-gold-300',
+  medium: 'bg-amber-50 text-amber-700 border-amber-200',
   high: 'bg-red-50 text-red-600 border-red-200',
 };
 
@@ -43,11 +41,15 @@ const STATUS_FILTERS: { label: string; value: SupportTicketStatus | undefined }[
   { label: 'Closed', value: 'closed' },
 ];
 
+const INPUT_CLASS =
+  'w-full rounded-lg border border-[#E8E8E0] bg-white px-3 py-2 text-sm text-[#1A1A18] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D4A853] focus:border-transparent';
+
 export default function AdminSupport() {
-  const { toast } = useToast();
   const [statusFilter, setStatusFilter] = useState<SupportTicketStatus | undefined>(undefined);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
 
   const { data, isLoading } = useAdminTickets({ status: statusFilter });
   const updateTicket = useUpdateTicket();
@@ -55,35 +57,27 @@ export default function AdminSupport() {
   const tickets = data?.results ?? [];
 
   const handleStatusChange = async (ticketId: string, status: SupportTicketStatus) => {
-    try {
-      await updateTicket.mutateAsync({ id: ticketId, status });
-      toast({ title: 'Ticket updated' });
-    } catch {
-      toast({ title: 'Update failed', variant: 'destructive' });
-    }
+    await updateTicket.mutateAsync({ id: ticketId, status });
   };
 
-  const handleSaveNotes = async (ticketId: string) => {
+  const handleSaveNotes = async (ticketId: string, currentNotes: string | null) => {
+    setSavingId(ticketId);
     try {
-      await updateTicket.mutateAsync({ id: ticketId, admin_notes: notes[ticketId] ?? '' });
-      toast({ title: 'Notes saved' });
-    } catch {
-      toast({ title: 'Failed to save notes', variant: 'destructive' });
+      await updateTicket.mutateAsync({ id: ticketId, admin_notes: notes[ticketId] ?? currentNotes ?? '' });
+      setSavedId(ticketId);
+      setTimeout(() => setSavedId(null), 2000);
+    } finally {
+      setSavingId(null);
     }
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="font-playfair text-2xl font-semibold tracking-tight text-[#0A0F1E]">
-          Support Inbox
-        </h1>
-        <p className="text-sm text-slate-500 mt-1">
-          {data?.totalCount ?? 0} total tickets
-        </p>
-      </div>
+      <PageHeader
+        title="Support Inbox"
+        description={`${data?.totalCount ?? 0} total tickets`}
+      />
 
-      {/* Status filter tabs */}
       <div className="flex gap-2 flex-wrap">
         {STATUS_FILTERS.map((f) => (
           <button
@@ -101,13 +95,11 @@ export default function AdminSupport() {
         ))}
       </div>
 
-      <Card className="border border-[#E8E8E0] shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="font-playfair text-lg font-semibold text-[#0A0F1E]">
-            Tickets
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="rounded-xl border border-[#E8E8E0] bg-white shadow-sm">
+        <div className="px-6 py-4 border-b border-[#E8E8E0]">
+          <h2 className="font-playfair text-lg font-semibold text-[#0A0F1E]">Tickets</h2>
+        </div>
+        <div className="p-4">
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
@@ -115,13 +107,11 @@ export default function AdminSupport() {
               ))}
             </div>
           ) : tickets.length === 0 ? (
-            <div className="text-center py-10">
-              <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-300 mb-3" />
-              <p className="text-sm font-medium text-[#0A0F1E]">No tickets found</p>
-              <p className="text-sm text-slate-500 mt-1">
-                {statusFilter ? `No ${STATUS_LABELS[statusFilter].toLowerCase()} tickets.` : 'All clear!'}
-              </p>
-            </div>
+            <EmptyState
+              icon={CheckCircle2}
+              title="No tickets found"
+              description={statusFilter ? `No ${STATUS_LABELS[statusFilter].toLowerCase()} tickets.` : 'All clear!'}
+            />
           ) : (
             <div className="space-y-2">
               {tickets.map((ticket) => {
@@ -129,7 +119,6 @@ export default function AdminSupport() {
                 const isExpanded = expandedId === ticket.id;
                 return (
                   <div key={ticket.id} className="rounded-lg border border-[#E8E8E0] overflow-hidden">
-                    {/* Row header */}
                     <button
                       className="w-full flex items-center gap-3 p-4 text-left hover:bg-[#FAFAF8] transition-colors"
                       onClick={() => {
@@ -147,11 +136,10 @@ export default function AdminSupport() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-[#0A0F1E] truncate">{ticket.subject}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          {ticket.user_role === 'host' ? (
-                            <Building2 className="h-3 w-3 text-slate-400" />
-                          ) : (
-                            <User className="h-3 w-3 text-slate-400" />
-                          )}
+                          {ticket.user_role === 'host'
+                            ? <Building2 className="h-3 w-3 text-slate-400" />
+                            : <User className="h-3 w-3 text-slate-400" />
+                          }
                           <span className="text-xs text-slate-500 capitalize">{ticket.user_role}</span>
                           <span className="text-xs text-slate-400">·</span>
                           <span className="text-xs text-slate-500">
@@ -160,17 +148,16 @@ export default function AdminSupport() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge className={cn('text-xs border', STATUS_STYLES[ticket.status])}>
+                        <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border', STATUS_STYLES[ticket.status])}>
                           {STATUS_LABELS[ticket.status]}
-                        </Badge>
-                        <Badge className={cn('text-xs border', PRIORITY_STYLES[ticket.priority])}>
+                        </span>
+                        <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border', PRIORITY_STYLES[ticket.priority])}>
                           {ticket.priority}
-                        </Badge>
+                        </span>
                         <ChevronDown className={cn('h-4 w-4 text-slate-400 transition-transform', isExpanded && 'rotate-180')} />
                       </div>
                     </button>
 
-                    {/* Expanded detail */}
                     {isExpanded && (
                       <div className="px-4 pb-4 border-t border-[#E8E8E0] bg-[#FAFAF8] space-y-4 pt-4">
                         <div>
@@ -178,7 +165,6 @@ export default function AdminSupport() {
                           <p className="text-sm text-[#1A1A18] whitespace-pre-wrap">{ticket.message}</p>
                         </div>
 
-                        {/* Status changer */}
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-xs font-medium text-slate-500">Update status:</span>
                           {(['open', 'in_progress', 'resolved', 'closed'] as SupportTicketStatus[]).map((s) => (
@@ -189,7 +175,7 @@ export default function AdminSupport() {
                               className={cn(
                                 'px-3 py-1 rounded-full text-xs font-medium border transition-colors',
                                 ticket.status === s
-                                  ? cn(STATUS_STYLES[s], 'opacity-100')
+                                  ? STATUS_STYLES[s]
                                   : 'bg-white border-[#E8E8E0] text-slate-600 hover:border-[#0A0F1E]',
                               )}
                             >
@@ -198,24 +184,22 @@ export default function AdminSupport() {
                           ))}
                         </div>
 
-                        {/* Admin notes */}
                         <div>
-                          <p className="text-xs font-medium text-slate-500 mb-1">Admin response / notes</p>
+                          <p className="text-xs font-medium text-slate-500 mb-1">Response / internal notes</p>
                           <textarea
                             rows={3}
                             value={notes[ticket.id] ?? ticket.admin_notes ?? ''}
                             onChange={(e) => setNotes((prev) => ({ ...prev, [ticket.id]: e.target.value }))}
                             placeholder="Add a response or internal note..."
-                            className="w-full rounded-md border border-[#E8E8E0] bg-white px-3 py-2 text-sm text-[#1A1A18] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#D4A853] resize-none"
+                            className={cn(INPUT_CLASS, 'resize-none')}
                           />
-                          <Button
-                            size="sm"
-                            className="mt-2 bg-[#D4A853] hover:bg-[#E2BC6A] text-[#0A0F1E] font-medium"
-                            onClick={() => handleSaveNotes(ticket.id)}
-                            disabled={updateTicket.isPending}
+                          <button
+                            onClick={() => handleSaveNotes(ticket.id, ticket.admin_notes)}
+                            disabled={savingId === ticket.id}
+                            className="mt-2 px-4 py-1.5 rounded-lg bg-[#D4A853] hover:bg-[#E2BC6A] text-[#0A0F1E] text-sm font-medium transition-colors disabled:opacity-60"
                           >
-                            Save Response
-                          </Button>
+                            {savingId === ticket.id ? 'Saving...' : savedId === ticket.id ? 'Saved ✓' : 'Save Response'}
+                          </button>
                         </div>
                       </div>
                     )}
@@ -224,8 +208,8 @@ export default function AdminSupport() {
               })}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
