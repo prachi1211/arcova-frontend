@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80';
-import { CalendarCheck, MapPin, Clock, ChevronRight, X, Search, Star, MessageSquare } from 'lucide-react';
+import { CalendarCheck, MapPin, Clock, ChevronRight, X, Search, Star, MessageSquare, ShieldCheck } from 'lucide-react';
 import { useBookings, useCancelBooking } from '@/hooks/useBookings';
 import { useCreateReview } from '@/hooks/useReviews';
 import { useTripStore } from '@/stores/tripStore';
@@ -321,9 +321,15 @@ export default function Bookings() {
             <h3 className="font-heading text-lg font-semibold text-navy-950 text-center mb-1">
               Cancel Booking
             </h3>
-            <p className="text-sm text-warm-500 text-center mb-6">
-              Are you sure you want to cancel this booking? This action cannot be undone.
+            <p className="text-sm text-warm-500 text-center mb-4">
+              Are you sure you want to cancel this booking?
             </p>
+            <div className="flex items-start gap-2.5 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2.5 mb-5">
+              <ShieldCheck size={14} className="text-emerald-600 mt-0.5 shrink-0" />
+              <p className="text-xs text-emerald-700 leading-relaxed">
+                <span className="font-semibold">Free cancellation applies.</span> You will receive a full refund to your original payment method within 5–7 business days.
+              </p>
+            </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setCancellingId(null)}

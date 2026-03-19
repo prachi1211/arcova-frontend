@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Sparkles, Send, User, MapPin, Plane, Hotel, Loader2, AlertCircle } from 'lucide-react';
+import { Sparkles, Send, User, MapPin, Plane, Hotel, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/stores/authStore';
 import { useTripStore } from '@/stores/tripStore';
@@ -40,6 +40,9 @@ interface Message {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001/api';
+
+const chatStorageKey = (userId: string) => `arcova_chat_messages_${userId}`;
+const tripPlanStorageKey = (userId: string) => `arcova_chat_tripplan_${userId}`;
 
 const SAMPLE_PROMPTS = [
   'Plan a 7-day trip to Japan for 2 people in April',
@@ -226,10 +229,26 @@ function TripPlanPanel({ plan }: { plan: TripPlan }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function Assistant() {
-  const { token } = useAuthStore();
+  const { token, user } = useAuthStore();
   const { items: tripItems } = useTripStore();
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [tripPlan, setTripPlan] = useState<TripPlan | null>(null);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    if (!user?.id) return [];
+    try {
+      const saved = localStorage.getItem(chatStorageKey(user.id));
+      return saved ? (JSON.parse(saved) as Message[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [tripPlan, setTripPlan] = useState<TripPlan | null>(() => {
+    if (!user?.id) return null;
+    try {
+      const saved = localStorage.getItem(tripPlanStorageKey(user.id));
+      return saved ? (JSON.parse(saved) as TripPlan) : null;
+    } catch {
+      return null;
+    }
+  });
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState('');
   const [input, setInput] = useState('');
@@ -238,6 +257,41 @@ export default function Assistant() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const prefillDone = useRef(false);
+
+  // Persist messages to localStorage on every change
+  useEffect(() => {
+    if (!user?.id) return;
+    // Don't save streaming messages — wait for the final state
+    if (messages.some((m) => m.isStreaming)) return;
+    try {
+      localStorage.setItem(chatStorageKey(user.id), JSON.stringify(messages));
+    } catch {
+      // localStorage may be full — ignore silently
+    }
+  }, [messages, user?.id]);
+
+  // Persist trip plan to localStorage
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      if (tripPlan) {
+        localStorage.setItem(tripPlanStorageKey(user.id), JSON.stringify(tripPlan));
+      } else {
+        localStorage.removeItem(tripPlanStorageKey(user.id));
+      }
+    } catch {
+      // ignore
+    }
+  }, [tripPlan, user?.id]);
+
+  const handleClearChat = () => {
+    setMessages([]);
+    setTripPlan(null);
+    if (user?.id) {
+      localStorage.removeItem(chatStorageKey(user.id));
+      localStorage.removeItem(tripPlanStorageKey(user.id));
+    }
+  };
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -336,18 +390,29 @@ export default function Assistant() {
     <div className="max-w-4xl mx-auto h-[calc(100vh-8rem)] flex flex-col">
       {/* Header */}
       <div className="mb-4 shrink-0">
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-9 h-9 rounded-xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
-            <Sparkles size={18} className="text-gold-500" />
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
+              <Sparkles size={18} className="text-gold-500" />
+            </div>
+            <div>
+              <h1 className="font-heading text-2xl font-semibold tracking-tight text-navy-950">
+                AI Travel Assistant
+              </h1>
+              <p className="text-xs text-warm-500">
+                {isInitialising ? 'Connecting…' : sessionId ? 'Ready · Powered by Gemini' : 'Offline'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="font-heading text-2xl font-semibold tracking-tight text-navy-950">
-              AI Travel Assistant
-            </h1>
-            <p className="text-xs text-warm-500">
-              {isInitialising ? 'Connecting…' : sessionId ? 'Ready · Powered by Gemini' : 'Offline'}
-            </p>
-          </div>
+          {messages.length > 0 && (
+            <button
+              onClick={handleClearChat}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-warm-500 hover:text-red-600 hover:bg-red-50 border border-warm-200 hover:border-red-200 transition-colors"
+            >
+              <Trash2 size={12} />
+              Clear chat
+            </button>
+          )}
         </div>
       </div>
 

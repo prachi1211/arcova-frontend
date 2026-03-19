@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PaymentElement, Elements, useStripe, useElements } from '@stripe/react-stripe-js';
 import type { Appearance } from '@stripe/stripe-js';
-import { Loader2, Lock, X, AlertCircle } from 'lucide-react';
+import { Loader2, Lock, X, AlertCircle, RefreshCw } from 'lucide-react';
 import { stripePromise } from '@/lib/stripe';
 import { formatCurrency } from '@/lib/utils';
 
@@ -66,12 +66,13 @@ function CheckoutForm({ amountCents, onSuccess, onClose }: CheckoutFormProps) {
     });
 
     if (stripeError) {
-      setError(stripeError.message ?? 'Payment failed. Please try again.');
+      setError(stripeError.message ?? 'Payment failed. Please check your card details and try again.');
     } else if (paymentIntent?.status === 'succeeded') {
       onSuccess();
     } else {
       setError('Payment did not complete. Please try again.');
     }
+    // Note: stripe.confirmPayment can be called again safely — the payment intent is still active.
 
     setProcessing(false);
   };
@@ -86,9 +87,15 @@ function CheckoutForm({ amountCents, onSuccess, onClose }: CheckoutFormProps) {
       />
 
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-          {error}
-        </p>
+        <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+          <div className="flex items-start gap-2">
+            <AlertCircle size={14} className="text-red-500 mt-0.5 shrink-0" />
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+          <p className="text-xs text-red-500 mt-1.5 ml-5">
+            Your card was not charged. Review your details above and try again.
+          </p>
+        </div>
       )}
 
       <div className="flex gap-3 pt-1">
@@ -109,6 +116,11 @@ function CheckoutForm({ amountCents, onSuccess, onClose }: CheckoutFormProps) {
             <>
               <Loader2 size={15} className="animate-spin" />
               Processing…
+            </>
+          ) : error ? (
+            <>
+              <RefreshCw size={13} />
+              Try Again
             </>
           ) : (
             <>

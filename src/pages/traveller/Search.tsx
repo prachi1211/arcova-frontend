@@ -1099,10 +1099,20 @@ export default function Search() {
                       />
                     </div>
                     <div>
-                      <label className={labelCls}>
-                        <Calendar size={10} className="inline mr-1" />
-                        Check-out
-                      </label>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className={labelCls}>
+                          <Calendar size={10} className="inline mr-1" />
+                          Check-out
+                        </label>
+                        {hotelCheckIn && hotelCheckOut && (
+                          <span className="text-[10px] font-semibold text-gold-400 bg-gold-500/15 px-2 py-0.5 rounded-full">
+                            {(() => {
+                              const n = nightsBetween(hotelCheckIn, hotelCheckOut);
+                              return n === 1 ? '1 night' : `${n} nights`;
+                            })()}
+                          </span>
+                        )}
+                      </div>
                       <input
                         type="date"
                         value={hotelCheckOut}
@@ -1246,10 +1256,20 @@ export default function Search() {
                           style={{ originX: 0 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <label className={labelCls}>
-                            <Calendar size={10} className="inline mr-1" />
-                            Return
-                          </label>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className={labelCls}>
+                              <Calendar size={10} className="inline mr-1" />
+                              Return
+                            </label>
+                            {flightDate && flightReturn && (
+                              <span className="text-[10px] font-semibold text-gold-400 bg-gold-500/15 px-2 py-0.5 rounded-full">
+                                {(() => {
+                                  const n = nightsBetween(flightDate, flightReturn);
+                                  return n === 1 ? '1 night' : `${n} nights`;
+                                })()}
+                              </span>
+                            )}
+                          </div>
                           <input
                             type="date"
                             value={flightReturn}
@@ -1366,10 +1386,17 @@ export default function Search() {
                       />
                     </div>
                     <div>
-                      <label className={labelCls}>
-                        <Calendar size={10} className="inline mr-1" />
-                        Return Date
-                      </label>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className={labelCls}>
+                          <Calendar size={10} className="inline mr-1" />
+                          Return Date
+                        </label>
+                        {carPickupDate && carReturnDate && (
+                          <span className="text-[10px] font-semibold text-gold-400 bg-gold-500/15 px-2 py-0.5 rounded-full">
+                            {carDays === 1 ? '1 day' : `${carDays} days`}
+                          </span>
+                        )}
+                      </div>
                       <input
                         type="date"
                         value={carReturnDate}
