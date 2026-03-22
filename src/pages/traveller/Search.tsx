@@ -25,6 +25,7 @@ import {
   RefreshCw,
   AlertCircle,
   Fuel,
+  Info,
 } from 'lucide-react';
 import { useSearchHotels } from '@/hooks/useSearch';
 import { useFlights, type Flight } from '@/hooks/useFlights';
@@ -57,10 +58,10 @@ const MOOD_FILTERS = [
 ];
 
 const POPULAR_ROUTES = [
-  { from: 'New York', fromCode: 'JFK', to: 'London', toCode: 'LHR', price: '$480' },
-  { from: 'Dubai', fromCode: 'DXB', to: 'Paris', toCode: 'CDG', price: '$620' },
-  { from: 'Los Angeles', fromCode: 'LAX', to: 'Kyoto', toCode: 'KIX', price: '$390' },
-  { from: 'London', fromCode: 'LHR', to: 'Maldives', toCode: 'MLE', price: '$720' },
+  { from: 'New York', fromCode: 'JFK', to: 'London', toCode: 'LHR', price: '~$480' },
+  { from: 'Dubai', fromCode: 'DXB', to: 'Paris', toCode: 'CDG', price: '~$620' },
+  { from: 'Los Angeles', fromCode: 'LAX', to: 'Kyoto', toCode: 'KIX', price: '~$390' },
+  { from: 'London', fromCode: 'LHR', to: 'Maldives', toCode: 'MLE', price: '~$720' },
 ];
 
 const AMENITY_MAP: Record<string, { icon: React.ReactNode; label: string }> = {
@@ -557,6 +558,22 @@ function NoResults({ onModify }: { onModify: () => void }) {
         <RefreshCw size={14} /> Modify Search
       </button>
     </motion.div>
+  );
+}
+
+// ─── Mock Data Banner ─────────────────────────────────────────────────────────
+
+function MockResultsBanner({ type }: { type: 'flights' | 'cars' }) {
+  return (
+    <div className="flex items-start gap-2.5 px-4 py-3 mb-5 rounded-xl bg-amber-50 border border-amber-200">
+      <Info size={14} className="text-amber-600 flex-shrink-0 mt-0.5" />
+      <p className="text-xs text-amber-800 leading-relaxed">
+        <span className="font-semibold">Sample results for demonstration.</span>{' '}
+        {type === 'flights'
+          ? 'Live flight search and booking is coming soon. Prices shown are indicative only.'
+          : 'Live car rental booking is coming soon. Availability and prices are illustrative.'}
+      </p>
+    </div>
   );
 }
 
@@ -1500,6 +1517,7 @@ export default function Search() {
                     animate={{ opacity: 1 }}
                     className="max-w-3xl mx-auto"
                   >
+                    <MockResultsBanner type="flights" />
                     <ResultsHeader label={flightLabel} count={flights.length} />
                     <div className="space-y-4">
                       {pagedFlights.map((flight, i) => (
@@ -1546,6 +1564,7 @@ export default function Search() {
                   <NoResults onModify={scrollToForm} />
                 ) : (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <MockResultsBanner type="cars" />
                     <ResultsHeader label={carLabel} count={cars.length} />
                     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                       {pagedCars.map((car, i) => (

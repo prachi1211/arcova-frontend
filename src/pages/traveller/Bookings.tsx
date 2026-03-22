@@ -269,6 +269,9 @@ export default function Bookings() {
                   <span className="text-xs text-warm-500 ml-1">
                     · Booked {formatDate(booking.bookedAt)}
                   </span>
+                  <p className="text-[10px] font-mono text-warm-400 mt-0.5 tracking-wide">
+                    REF #{booking.id.slice(0, 8).toUpperCase()}
+                  </p>
                 </div>
 
                 <div className="flex items-center gap-2">
