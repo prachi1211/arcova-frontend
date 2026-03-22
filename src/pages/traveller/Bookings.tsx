@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80';
-import { CalendarCheck, MapPin, Clock, ChevronRight, X, Search, Star, MessageSquare, ShieldCheck } from 'lucide-react';
-import { useBookings, useCancelBooking } from '@/hooks/useBookings';
+import { CalendarCheck, MapPin, Clock, ChevronRight, X, Search, Star, MessageSquare, ShieldCheck, CreditCard } from 'lucide-react';
+import { useBookings, useCancelBooking, useCreatePaymentIntent } from '@/hooks/useBookings';
 import { useCreateReview } from '@/hooks/useReviews';
 import { useTripStore } from '@/stores/tripStore';
+import { useQueryClient } from '@tanstack/react-query';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { BookingCardSkeleton } from '@/components/shared/LoadingSkeleton';
+import { PaymentModal } from '@/components/traveller/PaymentModal';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import type { BookingStatus } from '@/types';
@@ -142,9 +144,12 @@ export default function Bookings() {
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [reviewingBooking, setReviewingBooking] = useState<{ id: string; propertyName: string } | null>(null);
+  const [paymentData, setPaymentData] = useState<{ clientSecret: string; amountCents: number } | null>(null);
 
+  const queryClient = useQueryClient();
   const { data: bookings, isLoading, isError, error } = useBookings(activeTab === 'all' ? undefined : activeTab);
   const { mutate: cancelBooking, isPending } = useCancelBooking();
+  const { mutate: createIntent, isPending: isCreatingIntent } = useCreatePaymentIntent();
   const { removeItem } = useTripStore();
 
   const handleCancel = (id: string) => {
@@ -153,6 +158,14 @@ export default function Bookings() {
       onSuccess: () => {
         setCancellingId(null);
         if (booking?.propertyId) removeItem(booking.propertyId);
+      },
+    });
+  };
+
+  const handleCompletePayment = (bookingId: string) => {
+    createIntent(bookingId, {
+      onSuccess: (data) => {
+        setPaymentData({ clientSecret: data.clientSecret, amountCents: data.amountCents });
       },
     });
   };
@@ -270,6 +283,15 @@ export default function Bookings() {
                       <Star size={12} /> Leave a review
                     </button>
                   )}
+                  {booking.status === 'confirmed' && booking.paymentStatus && booking.paymentStatus !== 'succeeded' && (
+                    <button
+                      onClick={() => handleCompletePayment(booking.id)}
+                      disabled={isCreatingIntent}
+                      className="text-xs text-gold-700 font-semibold transition-colors flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gold-50 border border-gold-200 hover:bg-gold-100 disabled:opacity-60"
+                    >
+                      <CreditCard size={12} /> {isCreatingIntent ? 'Loading…' : 'Complete Payment'}
+                    </button>
+                  )}
                   {booking.status === 'confirmed' && (() => {
                     const hoursUntilCheckIn = (new Date(booking.checkIn).getTime() - Date.now()) / (1000 * 60 * 60);
                     return hoursUntilCheckIn >= 48 ? (
@@ -357,6 +379,18 @@ export default function Bookings() {
           onClose={() => setReviewingBooking(null)}
         />
       )}
+
+      {/* Complete Payment Modal */}
+      <PaymentModal
+        open={!!paymentData}
+        clientSecret={paymentData?.clientSecret ?? ''}
+        amountCents={paymentData?.amountCents ?? 0}
+        onClose={() => setPaymentData(null)}
+        onSuccess={() => {
+          setPaymentData(null);
+          queryClient.invalidateQueries({ queryKey: ['bookings'] });
+        }}
+      />
     </div>
   );
 }

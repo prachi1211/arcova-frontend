@@ -302,9 +302,11 @@ export default function HotelDetail() {
   const subtotal = nights > 0 && selectedRoomId ? nights * pricePerNight : 0;
   const total = subtotal;
 
+  // Use totalCount for display but calculate avg only from fetched results
   const reviewCount = reviewsData?.totalCount ?? 0;
-  const reviewAvg = reviewCount > 0
-    ? +(reviewsData!.results.reduce((s, r) => s + r.rating, 0) / reviewsData!.results.length).toFixed(1)
+  const fetchedResults = reviewsData?.results ?? [];
+  const reviewAvg = fetchedResults.length > 0
+    ? +(fetchedResults.reduce((s, r) => s + r.rating, 0) / fetchedResults.length).toFixed(1)
     : null;
   const maxGuests = Math.max(...availableRoomTypes.map((r) => r.maxGuests), 2);
   const lowestPrice = Math.min(...availableRoomTypes.map((r) => r.basePriceCents));

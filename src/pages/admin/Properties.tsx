@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Building2, Check, X, MapPin, User, AlertTriangle } from 'lucide-react';
-import { useAdminProperties, useUpdatePropertyStatus } from '@/hooks/useAdmin';
+import { useAdminProperties, useAdminStats, useUpdatePropertyStatus } from '@/hooks/useAdmin';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { EmptyState } from '@/components/shared/EmptyState';
@@ -86,6 +86,7 @@ export default function AdminProperties() {
     page,
     limit: 20,
   });
+  const { data: platformStats } = useAdminStats();
 
   const updateStatus = useUpdatePropertyStatus();
 
@@ -130,9 +131,9 @@ export default function AdminProperties() {
             )}
           >
             {tab.label}
-            {tab.value === 'pending_review' && (data?.totalCount ?? 0) > 0 && statusFilter === 'pending_review' && (
+            {tab.value === 'pending_review' && (platformStats?.pendingProperties ?? 0) > 0 && (
               <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-gold-500 text-navy-950 text-[10px] font-bold">
-                {data?.totalCount}
+                {platformStats!.pendingProperties}
               </span>
             )}
           </button>
