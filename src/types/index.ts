@@ -70,6 +70,7 @@ export interface RoomType {
 // ─── Bookings ───────────────────────────────────────────────────────────────
 
 export type BookingStatus = 'confirmed' | 'cancelled' | 'completed' | 'no_show';
+export type PaymentStatus = 'pending' | 'processing' | 'succeeded' | 'failed' | 'refunded';
 
 export interface Booking {
   id: string;
@@ -85,6 +86,7 @@ export interface Booking {
   netRevenueCents: number;
   bookedAt: string;
   cancelledAt?: string;
+  paymentStatus?: PaymentStatus | null;
   // joined
   property?: PropertySummary;
   roomType?: Pick<RoomType, 'id' | 'name' | 'maxGuests'>;

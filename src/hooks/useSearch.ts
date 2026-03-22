@@ -105,6 +105,8 @@ export function useSearchHotels(params?: Partial<SearchParams>, options?: { enab
       const { data } = await api.get('/search/hotels', {
         params: {
           city: params?.destination,
+          checkIn: params?.checkIn,
+          checkOut: params?.checkOut,
           guests: params?.guests,
           // If multiple star filters, use the lowest selected as minimum
           rating: params?.stars && params.stars.length > 0 ? Math.min(...params.stars) : undefined,

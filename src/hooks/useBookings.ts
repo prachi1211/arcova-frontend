@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
-import type { Booking, BookingStatus, PropertyStatus } from '@/types';
+import type { Booking, BookingStatus, PaymentStatus, PropertyStatus } from '@/types';
 
 // ─── Raw backend shape (snake_case + Supabase join) ───────────────────────────
 
@@ -35,6 +35,7 @@ interface RawBooking {
   status: BookingStatus;
   booked_at: string;
   cancelled_at: string | null;
+  payment_status: string | null;
   properties: RawProperty | null;
   room_types: RawRoomType | null;
 }
@@ -63,6 +64,7 @@ function toBooking(raw: RawBooking): Booking {
     netRevenueCents: raw.net_revenue_cents,
     bookedAt: raw.booked_at,
     ...(raw.cancelled_at ? { cancelledAt: raw.cancelled_at } : {}),
+    paymentStatus: (raw.payment_status as PaymentStatus | null) ?? null,
     ...(prop
       ? {
           property: {
