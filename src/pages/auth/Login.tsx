@@ -75,24 +75,24 @@ export default function Login() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="font-heading text-3xl font-semibold tracking-tight text-navy-950 mb-2">
+        <h1 className="font-heading text-3xl font-semibold tracking-tight text-[#e3e3db] mb-2">
           Welcome back
         </h1>
-        <p className="text-sm text-warm-500">Sign in to continue your journey with Arcova.</p>
+        <p className="text-sm text-[#e3e3db]/55">Sign in to continue your journey with Arcova.</p>
       </div>
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
         {/* Server error */}
         {serverError && (
-          <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
             {serverError}
           </div>
         )}
 
         {/* Email */}
         <div className="space-y-1.5">
-          <label htmlFor="email" className="block text-sm font-medium text-navy-950">
+          <label htmlFor="email" className="block text-sm font-medium text-[#e3e3db]/80">
             Email address
           </label>
           <input
@@ -102,25 +102,25 @@ export default function Login() {
             autoComplete="email"
             placeholder="you@example.com"
             className={cn(
-              'w-full h-11 rounded-xl border bg-white px-4 text-sm text-navy-950 placeholder:text-warm-400 outline-none transition-all duration-200',
-              'focus:border-gold-500 focus:ring-2 focus:ring-gold-500/15',
+              'w-full h-11 rounded-xl border bg-[#25293a] px-4 text-sm text-[#e3e3db] placeholder:text-[#e3e3db]/30 outline-none transition-all duration-200',
+              'focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20',
               errors.email
-                ? 'border-red-400 focus:border-red-400 focus:ring-red-400/15'
-                : 'border-warm-200',
+                ? 'border-red-500/40 focus:border-red-500/40 focus:ring-red-500/15'
+                : 'border-white/[0.08]',
             )}
           />
-          {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email.message}</p>}
+          {errors.email && <p className="text-xs text-red-400 mt-1">{errors.email.message}</p>}
         </div>
 
         {/* Password */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label htmlFor="password" className="block text-sm font-medium text-navy-950">
+            <label htmlFor="password" className="block text-sm font-medium text-[#e3e3db]/80">
               Password
             </label>
             <Link
               to="/auth/forgot-password"
-              className="text-xs font-medium text-gold-600 hover:text-gold-500 transition-colors"
+              className="text-xs font-medium text-gold-400 hover:text-gold-300 transition-colors"
             >
               Forgot password?
             </Link>
@@ -133,24 +133,24 @@ export default function Login() {
               autoComplete="current-password"
               placeholder="••••••••"
               className={cn(
-                'w-full h-11 rounded-xl border bg-white px-4 pr-11 text-sm text-navy-950 placeholder:text-warm-400 outline-none transition-all duration-200',
-                'focus:border-gold-500 focus:ring-2 focus:ring-gold-500/15',
+                'w-full h-11 rounded-xl border bg-[#25293a] px-4 pr-11 text-sm text-[#e3e3db] placeholder:text-[#e3e3db]/30 outline-none transition-all duration-200',
+                'focus:border-gold-500/50 focus:ring-1 focus:ring-gold-500/20',
                 errors.password
-                  ? 'border-red-400 focus:border-red-400 focus:ring-red-400/15'
-                  : 'border-warm-200',
+                  ? 'border-red-500/40 focus:border-red-500/40 focus:ring-red-500/15'
+                  : 'border-white/[0.08]',
               )}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-warm-400 hover:text-warm-600 transition-colors"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#e3e3db]/40 hover:text-[#e3e3db]/70 transition-colors"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
           {errors.password && (
-            <p className="text-xs text-red-600 mt-1">{errors.password.message}</p>
+            <p className="text-xs text-red-400 mt-1">{errors.password.message}</p>
           )}
         </div>
 
@@ -158,7 +158,8 @@ export default function Login() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full h-11 rounded-xl bg-gold-500 hover:bg-gold-400 active:bg-gold-600 text-navy-950 text-sm font-semibold transition-all duration-200 hover:shadow-[0_0_20px_rgba(212,168,83,0.25)] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-1"
+          style={{ background: 'linear-gradient(135deg, #eec068 0%, #9c7625 100%)' }}
+          className="w-full h-11 rounded-xl text-[#0e1322] text-sm font-semibold transition-all duration-200 hover:shadow-[0_0_20px_rgba(212,168,83,0.25)] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-1"
         >
           {isSubmitting && <Loader2 size={16} className="animate-spin" />}
           {isSubmitting ? 'Signing in…' : 'Sign in'}
@@ -167,17 +168,17 @@ export default function Login() {
 
       {/* Divider */}
       <div className="flex items-center gap-4 my-7">
-        <div className="flex-1 h-px bg-warm-200" />
-        <span className="text-xs text-warm-400 font-medium">or</span>
-        <div className="flex-1 h-px bg-warm-200" />
+        <div className="flex-1 h-px bg-white/[0.08]" />
+        <span className="text-xs text-[#e3e3db]/35 font-medium">or</span>
+        <div className="flex-1 h-px bg-white/[0.08]" />
       </div>
 
       {/* Sign up link */}
-      <p className="text-center text-sm text-warm-500">
+      <p className="text-center text-sm text-[#e3e3db]/50">
         Don&apos;t have an account?{' '}
         <Link
           to="/auth/signup"
-          className="font-semibold text-navy-950 hover:text-gold-600 transition-colors"
+          className="font-semibold text-[#e3e3db] hover:text-gold-400 transition-colors"
         >
           Create one
         </Link>
