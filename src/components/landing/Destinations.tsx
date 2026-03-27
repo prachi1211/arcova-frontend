@@ -46,10 +46,11 @@ export function Destinations() {
 
   return (
     /* surface — base floor level, sits between surface-low sections */
-    <section id="destinations" className="relative py-24 md:py-36 bg-[#0e1322] overflow-hidden noise-overlay">
-      {/* Ambient background glow */}
+    <section id="destinations" className="relative py-24 md:py-36 bg-[#0e1322] overflow-hidden">
+      {/* Section identity: top hairline + centred bottom warmth */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/3 right-0 w-[600px] h-[600px] bg-gold-500/[0.03] rounded-full blur-[160px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[1px] bg-gradient-to-r from-transparent via-gold-500/[0.10] to-transparent" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-gold-500/[0.03] rounded-full blur-[200px]" />
       </div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12">

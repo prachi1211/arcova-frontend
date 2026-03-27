@@ -60,8 +60,14 @@ const stats = [
 
 export function Features() {
   return (
-    /* surface-low — one tone lighter than base, no border needed */
-    <section id="experience" className="relative py-24 md:py-36 bg-[#161b2b] overflow-hidden noise-overlay">
+    <section id="experience" className="relative py-28 md:py-40 bg-[#0e1322] overflow-hidden">
+      {/* Section identity via ambient light, not competing hues */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[1px] bg-gradient-to-r from-transparent via-gold-500/[0.12] to-transparent" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gold-500/[0.03] rounded-full blur-[180px]" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gold-500/[0.025] rounded-full blur-[160px]" />
+      </div>
+
       <div className="max-w-[1400px] mx-auto px-6 md:px-12">
 
         {/* Section Header */}

@@ -27,11 +27,12 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    /* surface-low — creates tonal rhythm with adjacent surface sections */
-    <section id="testimonials" className="relative py-24 md:py-36 bg-[#161b2b] overflow-hidden noise-overlay">
-      {/* Ambient glow */}
+    <section id="testimonials" className="relative py-28 md:py-36 bg-[#0e1322] overflow-hidden">
+      {/* Section identity: top hairline + top-right warm glow — unique signature */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute bottom-0 left-1/3 w-[500px] h-[400px] bg-gold-500/[0.04] rounded-full blur-[140px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[1px] bg-gradient-to-r from-transparent via-gold-500/[0.10] to-transparent" />
+        <div className="absolute top-0 right-0 w-[700px] h-[500px] bg-gold-500/[0.04] rounded-full blur-[180px]" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[300px] bg-gold-500/[0.025] rounded-full blur-[130px]" />
       </div>
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12">

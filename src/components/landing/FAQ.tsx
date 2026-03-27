@@ -50,33 +50,29 @@ function FAQItem({
   onToggle: () => void;
 }) {
   return (
-    /* No border-b dividers — spacing is the separator (design spec: "No dividers") */
-    <div className="py-6 md:py-7">
+    <div className="border-b border-warm-200 last:border-b-0">
       <button
         onClick={onToggle}
-        className="flex items-center justify-between w-full text-left gap-6 group"
+        className="flex items-center justify-between w-full py-6 md:py-7 text-left gap-6 group"
       >
         <span
           className={cn(
             'text-base md:text-lg font-semibold transition-colors duration-300',
-            isOpen ? 'text-gold-400' : 'text-[#e3e3db]/80 group-hover:text-gold-400',
+            isOpen ? 'text-gold-600' : 'text-navy-950 group-hover:text-gold-600',
           )}
         >
           {question}
         </span>
-        {/* Ghost border chevron button */}
         <div
           className={cn(
             'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300',
-            isOpen
-              ? 'bg-gold-500 rotate-180'
-              : 'bg-[#2f3445] group-hover:bg-[#2f3445] border border-white/[0.08]',
+            isOpen ? 'bg-gold-500 rotate-180' : 'bg-warm-100 group-hover:bg-gold-100',
           )}
         >
           <ChevronDown
             className={cn(
               'w-4 h-4 transition-colors duration-300',
-              isOpen ? 'text-navy-950' : 'text-[#e3e3db]/50',
+              isOpen ? 'text-navy-950' : 'text-warm-500',
             )}
           />
         </div>
@@ -90,7 +86,7 @@ function FAQItem({
             transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
             className="overflow-hidden"
           >
-            <p className="text-sm md:text-[15px] text-[#e3e3db]/50 leading-relaxed pt-4 pr-14">
+            <p className="text-sm md:text-[15px] text-warm-500 leading-relaxed pb-6 md:pb-7 pr-14">
               {answer}
             </p>
           </motion.div>
@@ -104,8 +100,8 @@ export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    /* surface-low — sits between surface sections */
-    <section id="faq" className="relative py-24 md:py-36 bg-[#161b2b] overflow-hidden noise-overlay">
+    /* Intentional light break in the dark narrative — FAQs demand readability */
+    <section id="faq" className="py-24 md:py-32 bg-warm-50">
       <div className="max-w-[1400px] mx-auto px-6 md:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
           {/* Left column — sticky header */}
@@ -116,21 +112,21 @@ export function FAQ() {
             transition={{ duration: 0.7, ease }}
             className="lg:col-span-4 lg:sticky lg:top-32 lg:self-start"
           >
-            <span className="text-[11px] font-semibold text-gold-400 uppercase tracking-[0.25em] mb-5 block">
+            <span className="text-[11px] font-semibold text-gold-600 uppercase tracking-[0.25em] mb-5 block">
               Common Questions
             </span>
-            <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl font-semibold text-[#e3e3db] leading-[1.1] tracking-tight mb-5">
+            <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl font-semibold text-navy-950 leading-[1.1] tracking-tight mb-5">
               Everything You
               <br />
-              Need to <span className="italic text-gold-400">Know.</span>
+              Need to <span className="italic text-gold-500">Know.</span>
             </h2>
-            <p className="text-base text-[#e3e3db]/50 leading-relaxed max-w-sm">
+            <p className="text-base text-warm-500 leading-relaxed max-w-sm">
               Have a question that isn&apos;t answered here? Reach out to our team and we&apos;ll
               get back to you within 24 hours.
             </p>
           </motion.div>
 
-          {/* Right column — accordion on surface-high card */}
+          {/* Right column — scrollable accordion */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -138,21 +134,15 @@ export function FAQ() {
             transition={{ duration: 0.7, delay: 0.15, ease }}
             className="lg:col-span-8"
           >
-            {/* surface-high card — tonal lift, no hard border */}
-            <div className="bg-[#25293a] rounded-[2rem] px-6 sm:px-8 md:px-10 py-2 shadow-[0_20px_40px_rgba(0,0,0,0.3)]">
+            <div className="bg-white rounded-3xl md:rounded-[32px] p-6 sm:p-8 md:p-10 shadow-sm shadow-navy-950/[0.03]">
               {faqs.map((faq, index) => (
-                <div
+                <FAQItem
                   key={faq.question}
-                  /* Tonal separation via spacing only — no divider lines */
-                  className={cn(index < faqs.length - 1 && 'border-b border-white/[0.05]')}
-                >
-                  <FAQItem
-                    question={faq.question}
-                    answer={faq.answer}
-                    isOpen={openIndex === index}
-                    onToggle={() => setOpenIndex(openIndex === index ? null : index)}
-                  />
-                </div>
+                  question={faq.question}
+                  answer={faq.answer}
+                  isOpen={openIndex === index}
+                  onToggle={() => setOpenIndex(openIndex === index ? null : index)}
+                />
               ))}
             </div>
           </motion.div>
