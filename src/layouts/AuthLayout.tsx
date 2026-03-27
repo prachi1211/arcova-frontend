@@ -45,15 +45,15 @@ export function AuthLayout() {
         </div>
       </div>
 
-      {/* ── Right panel — form ── */}
-      <div className="flex-1 flex flex-col min-h-screen bg-warm-50">
-        {/* Mobile logo */}
-        <div className="lg:hidden flex items-center justify-between px-6 py-5 border-b border-warm-200">
+      {/* ── Right panel — form — surface-low atmosphere ── */}
+      <div className="flex-1 flex flex-col min-h-screen bg-[#161b2b]">
+        {/* Mobile logo — ghost border only */}
+        <div className="lg:hidden flex items-center justify-between px-6 py-5 border-b border-white/[0.06]">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-navy-950">
+            <div className="w-8 h-8 flex items-center justify-center rounded-xl bg-[#25293a]">
               <span className="font-heading text-base font-bold text-gold-400">A</span>
             </div>
-            <span className="font-heading text-lg font-bold tracking-tight text-navy-950">ARCOVA</span>
+            <span className="font-heading text-lg font-bold tracking-tight text-[#e3e3db]">ARCOVA</span>
           </Link>
         </div>
 
@@ -69,9 +69,9 @@ export function AuthLayout() {
           </motion.div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-5 border-t border-warm-200 text-center">
-          <p className="text-xs text-warm-500">
+        {/* Footer — ghost border, no line weight */}
+        <div className="px-6 py-5 border-t border-white/[0.05] text-center">
+          <p className="text-xs text-[#e3e3db]/30">
             &copy; {new Date().getFullYear()} Arcova. All rights reserved.
           </p>
         </div>

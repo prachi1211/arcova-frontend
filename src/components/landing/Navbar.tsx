@@ -44,7 +44,8 @@ export function Navbar() {
       className={cn(
         'fixed top-0 w-full z-50 transition-all duration-500',
         scrolled || mobileOpen
-          ? 'bg-white/90 backdrop-blur-xl border-b border-warm-200/50'
+          /* Glassmorphism — surface-variant 60% + 20px blur + ghost border */
+          ? 'bg-[#161b2b]/60 backdrop-blur-[20px] border-b border-white/[0.07]'
           : 'bg-transparent border-b border-transparent',
       )}
     >
@@ -55,24 +56,12 @@ export function Navbar() {
             <div
               className={cn(
                 'w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500',
-                scrolled || mobileOpen ? 'bg-navy-950' : 'bg-white/15 backdrop-blur-sm',
+                scrolled || mobileOpen ? 'bg-[#25293a]' : 'bg-white/[0.08] backdrop-blur-sm',
               )}
             >
-              <span
-                className={cn(
-                  'font-heading text-xl font-bold transition-colors duration-500',
-                  scrolled || mobileOpen ? 'text-gold-500' : 'text-gold-400',
-                )}
-              >
-                A
-              </span>
+              <span className="font-heading text-xl font-bold text-gold-400">A</span>
             </div>
-            <span
-              className={cn(
-                'font-heading text-[22px] font-bold tracking-tight transition-colors duration-500',
-                scrolled || mobileOpen ? 'text-navy-950' : 'text-white',
-              )}
-            >
+            <span className="font-heading text-[22px] font-bold tracking-tight text-white">
               ARCOVA
             </span>
           </button>
@@ -84,42 +73,31 @@ export function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
-                  className={cn(
-                    'text-[13px] font-semibold uppercase tracking-[0.15em] transition-colors duration-500',
-                    scrolled
-                      ? 'text-warm-600 hover:text-gold-600'
-                      : 'text-white/70 hover:text-white',
-                  )}
+                  className="text-[13px] font-semibold uppercase tracking-[0.15em] text-[#e3e3db]/55 hover:text-[#e3e3db] transition-colors duration-300"
                 >
                   {link.label}
                 </a>
               ))}
               <Link
                 to="/search"
-                className={cn(
-                  'text-[13px] font-semibold uppercase tracking-[0.15em] transition-colors duration-500',
-                  scrolled ? 'text-warm-600 hover:text-gold-600' : 'text-white/70 hover:text-white',
-                )}
+                className="text-[13px] font-semibold uppercase tracking-[0.15em] text-[#e3e3db]/55 hover:text-[#e3e3db] transition-colors duration-300"
               >
                 Search
               </Link>
             </div>
 
-            <div className={cn('h-6 w-px transition-colors duration-500', scrolled ? 'bg-warm-200' : 'bg-white/20')} />
+            <div className="h-6 w-px bg-white/[0.12]" />
 
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setAvatarOpen((v) => !v)}
-                  className={cn(
-                    'flex items-center gap-2.5 px-3 py-1.5 rounded-xl transition-all',
-                    scrolled ? 'hover:bg-warm-100' : 'hover:bg-white/10',
-                  )}
+                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl hover:bg-white/[0.06] transition-all"
                 >
-                  <div className="w-8 h-8 rounded-full bg-navy-950 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-[#25293a] border border-white/[0.1] flex items-center justify-center">
                     <span className="text-xs font-semibold text-gold-400">{initials}</span>
                   </div>
-                  <span className={cn('text-sm font-semibold', scrolled ? 'text-navy-950' : 'text-white')}>
+                  <span className="text-sm font-semibold text-[#e3e3db]">
                     {user.fullName?.split(' ')[0] ?? 'Account'}
                   </span>
                 </button>
@@ -127,18 +105,19 @@ export function Navbar() {
                 {avatarOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setAvatarOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl border border-warm-200 shadow-xl z-20 py-1 overflow-hidden">
+                    {/* Glass dropdown — no hard border, ghost outline */}
+                    <div className="absolute right-0 mt-2 w-48 bg-[#25293a]/80 backdrop-blur-[20px] rounded-2xl border border-white/[0.08] shadow-[0_20px_40px_rgba(0,0,0,0.45)] z-20 py-1.5 overflow-hidden">
                       <Link
                         to={ROLE_HOME[user.role]}
                         onClick={() => setAvatarOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-navy-950 hover:bg-warm-50"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#e3e3db]/80 hover:text-[#e3e3db] hover:bg-white/[0.06] transition-colors"
                       >
-                        <LayoutDashboard size={14} className="text-warm-400" /> Dashboard
+                        <LayoutDashboard size={14} className="text-gold-400/70" /> Dashboard
                       </Link>
-                      <div className="h-px bg-warm-100 my-1" />
+                      <div className="my-1 h-px bg-white/[0.06]" />
                       <button
                         onClick={() => { logout(); setAvatarOpen(false); }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-500 hover:bg-red-50"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-400/80 hover:text-red-300 hover:bg-white/[0.04] transition-colors"
                       >
                         Sign out
                       </button>
@@ -150,16 +129,15 @@ export function Navbar() {
               <div className="flex items-center gap-4">
                 <Link
                   to="/auth/login"
-                  className={cn(
-                    'text-[13px] font-semibold transition-colors duration-500',
-                    scrolled ? 'text-navy-950 hover:text-gold-600' : 'text-white/90 hover:text-white',
-                  )}
+                  className="text-[13px] font-semibold text-[#e3e3db]/70 hover:text-[#e3e3db] transition-colors duration-300"
                 >
                   Log In
                 </Link>
+                {/* Gold gradient CTA — signature primary button */}
                 <Link
                   to="/auth/signup"
-                  className="inline-flex items-center justify-center rounded-full bg-gold-500 px-7 py-2.5 text-[13px] font-semibold text-navy-950 hover:bg-gold-400 active:bg-gold-600 transition-all duration-200 hover:shadow-[0_0_20px_rgba(212,168,83,0.25)]"
+                  className="inline-flex items-center justify-center rounded-full bg-gold-gradient px-7 py-2.5 text-[13px] font-semibold text-navy-950 hover:opacity-90 active:opacity-80 transition-all duration-200 shadow-lg shadow-gold-500/20 hover:shadow-xl hover:shadow-gold-500/30"
+                  style={{ background: 'linear-gradient(135deg, #eec068 0%, #9c7625 100%)' }}
                 >
                   Get Started
                 </Link>
@@ -170,7 +148,7 @@ export function Navbar() {
           {/* Mobile toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className={cn('lg:hidden p-2 transition-colors duration-500', scrolled || mobileOpen ? 'text-navy-950' : 'text-white')}
+            className="lg:hidden p-2 text-[#e3e3db]/70 hover:text-[#e3e3db] transition-colors duration-300"
             aria-label="Toggle menu"
           >
             {mobileOpen ? <X size={24} /> : <Menu size={24} />}
@@ -178,12 +156,12 @@ export function Navbar() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — dark glass surface */}
       <motion.div
         initial={false}
         animate={mobileOpen ? { height: 'auto', opacity: 1 } : { height: 0, opacity: 0 }}
         transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-        className="lg:hidden bg-white/95 backdrop-blur-xl border-b border-warm-200 overflow-hidden"
+        className="lg:hidden bg-[#161b2b]/95 backdrop-blur-[20px] border-b border-white/[0.05] overflow-hidden"
       >
         <div className="px-6 py-8 space-y-5">
           {navLinks.map((link) => (
@@ -191,29 +169,42 @@ export function Navbar() {
               key={link.href}
               href={link.href}
               onClick={() => setMobileOpen(false)}
-              className="block text-xl font-heading font-bold text-navy-950"
+              className="block text-xl font-heading font-bold text-[#e3e3db]"
             >
               {link.label}
             </a>
           ))}
-          <Link to="/search" onClick={() => setMobileOpen(false)} className="block text-xl font-heading font-bold text-navy-950">
+          <Link
+            to="/search"
+            onClick={() => setMobileOpen(false)}
+            className="block text-xl font-heading font-bold text-[#e3e3db]"
+          >
             Search Hotels
           </Link>
-          <div className="pt-6 border-t border-warm-200 flex flex-col gap-3">
+          <div className="pt-6 border-t border-white/[0.07] flex flex-col gap-3">
             {user ? (
               <Link
                 to={ROLE_HOME[user.role]}
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-center h-12 rounded-xl bg-navy-950 text-sm font-semibold text-white hover:bg-navy-800 transition-colors"
+                className="flex items-center justify-center h-12 rounded-2xl bg-[#25293a] border border-white/[0.08] text-sm font-semibold text-[#e3e3db] hover:bg-[#2f3445] transition-colors"
               >
                 Go to Dashboard
               </Link>
             ) : (
               <>
-                <Link to="/auth/login" onClick={() => setMobileOpen(false)} className="flex items-center justify-center h-12 rounded-xl border border-warm-200 text-sm font-semibold text-navy-950 hover:bg-warm-50 transition-colors">
+                <Link
+                  to="/auth/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center h-12 rounded-2xl border border-white/[0.12] text-sm font-semibold text-[#e3e3db]/80 hover:bg-white/[0.05] transition-colors"
+                >
                   Log In
                 </Link>
-                <Link to="/auth/signup" onClick={() => setMobileOpen(false)} className="flex items-center justify-center h-12 rounded-xl bg-gold-500 text-sm font-semibold text-navy-950 hover:bg-gold-400 transition-colors">
+                <Link
+                  to="/auth/signup"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center justify-center h-12 rounded-2xl text-sm font-semibold text-navy-950 transition-colors"
+                  style={{ background: 'linear-gradient(135deg, #eec068 0%, #9c7625 100%)' }}
+                >
                   Get Started
                 </Link>
               </>

@@ -27,8 +27,14 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section id="testimonials" className="py-24 md:py-32 bg-warm-50">
-      <div className="max-w-[1400px] mx-auto px-6 md:px-12">
+    /* surface-low — creates tonal rhythm with adjacent surface sections */
+    <section id="testimonials" className="relative py-24 md:py-36 bg-[#161b2b] overflow-hidden noise-overlay">
+      {/* Ambient glow */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute bottom-0 left-1/3 w-[500px] h-[400px] bg-gold-500/[0.04] rounded-full blur-[140px]" />
+      </div>
+
+      <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -38,18 +44,18 @@ export function Testimonials() {
           className="text-center mb-16 md:mb-24"
         >
           <div className="flex items-center gap-3 justify-center mb-6">
-            <span className="w-10 h-px bg-gold-500" />
-            <span className="text-[11px] font-semibold text-gold-600 uppercase tracking-[0.25em]">
+            <span className="w-10 h-px bg-gold-500/60" />
+            <span className="text-[11px] font-semibold text-gold-400 uppercase tracking-[0.25em]">
               Voices of Excellence
             </span>
-            <span className="w-10 h-px bg-gold-500" />
+            <span className="w-10 h-px bg-gold-500/60" />
           </div>
-          <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl font-semibold text-navy-950 tracking-tight">
-            Trusted by the <span className="italic text-gold-500">Discerning.</span>
+          <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl font-semibold text-[#e3e3db] tracking-tight">
+            Trusted by the <span className="italic text-gold-400">Discerning.</span>
           </h2>
         </motion.div>
 
-        {/* Cards */}
+        {/* Cards — surface-high chips sitting on surface-low, NO border lines */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {testimonials.map((t, index) => (
             <motion.div
@@ -58,19 +64,23 @@ export function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ delay: index * 0.12, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="relative p-8 sm:p-10 md:p-12 bg-white rounded-3xl md:rounded-[36px] border border-warm-200 group hover:shadow-xl hover:shadow-navy-950/[0.04] transition-all duration-500 hover:-translate-y-1"
+              /* surface-high on surface-low — tonal depth, no border required */
+              className="relative p-8 sm:p-10 md:p-12 bg-[#25293a] rounded-[2rem] group hover:bg-[#2f3445] hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] transition-all duration-500 hover:-translate-y-1 overflow-hidden"
             >
-              {/* Decorative quote */}
-              <Quote className="absolute top-8 right-8 md:top-10 md:right-10 text-gold-500/10 w-14 h-14 md:w-16 md:h-16" />
+              {/* Subtle top-left gold glow on hover */}
+              <div className="absolute -top-8 -left-8 w-32 h-32 bg-gold-500/[0.06] rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+              {/* Decorative quote icon */}
+              <Quote className="absolute top-8 right-8 md:top-10 md:right-10 text-gold-500/[0.08] w-14 h-14 md:w-16 md:h-16" />
 
               {/* Avatar + info */}
               <div className="flex items-center gap-4 mb-6 md:mb-8">
-                <div className="w-12 h-12 rounded-full bg-navy-950 flex items-center justify-center text-[12px] font-bold text-gold-400 shadow-sm shrink-0">
+                <div className="w-12 h-12 rounded-full bg-[#0e1322] flex items-center justify-center text-[12px] font-bold text-gold-400 shrink-0">
                   {t.initials}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-navy-950">{t.name}</p>
-                  <p className="text-[11px] text-warm-500 font-medium mt-0.5">{t.role}</p>
+                  <p className="text-sm font-semibold text-[#e3e3db]">{t.name}</p>
+                  <p className="text-[11px] text-[#e3e3db]/45 font-medium mt-0.5">{t.role}</p>
                 </div>
               </div>
 
@@ -82,7 +92,7 @@ export function Testimonials() {
               </div>
 
               {/* Quote */}
-              <p className="text-[15px] md:text-base text-warm-700 leading-relaxed italic">
+              <p className="text-[15px] md:text-base text-[#e3e3db]/65 leading-relaxed italic relative z-10">
                 &ldquo;{t.quote}&rdquo;
               </p>
             </motion.div>

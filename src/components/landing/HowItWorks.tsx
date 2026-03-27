@@ -33,7 +33,7 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 md:py-32 bg-navy-950 overflow-hidden relative">
+    <section id="how-it-works" className="py-24 md:py-36 bg-[#0e1322] overflow-hidden relative">
       {/* Ambient glows */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-gold-500/[0.05] rounded-full blur-[130px]" />
@@ -60,7 +60,7 @@ export function HowItWorks() {
             Travel Made{' '}
             <span className="italic text-gold-400">Effortless.</span>
           </h2>
-          <p className="text-base md:text-lg text-warm-500 max-w-xl mx-auto leading-relaxed mt-5">
+          <p className="text-base md:text-lg text-[#e3e3db]/50 max-w-xl mx-auto leading-relaxed mt-5">
             From first search to final checkout — a seamless experience built around how you
             actually travel.
           </p>
@@ -75,7 +75,8 @@ export function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-40px' }}
               transition={{ delay: index * 0.14, duration: 0.7, ease }}
-              className="group relative rounded-3xl p-8 md:p-10 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] hover:border-gold-500/25 hover:bg-white/[0.07] transition-all duration-500 overflow-hidden flex flex-col"
+              /* surface-high cards on surface base — tonal lift, ghost border as accessibility fallback */
+              className="group relative rounded-[2rem] p-8 md:p-10 bg-[#25293a] hover:bg-[#2f3445] transition-all duration-500 overflow-hidden flex flex-col shadow-[0_20px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_24px_48px_rgba(0,0,0,0.45)] hover:-translate-y-1"
             >
               {/* Subtle card glow on hover */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
@@ -87,8 +88,8 @@ export function HowItWorks() {
                 {step.number}
               </span>
 
-              {/* Icon */}
-              <div className="relative mb-7 w-12 h-12 rounded-xl flex items-center justify-center bg-gold-500/10 border border-gold-500/20 group-hover:bg-gold-500/15 group-hover:border-gold-500/35 transition-all duration-400">
+              {/* Icon — recessed surface on surface-high card */}
+              <div className="relative mb-7 w-12 h-12 rounded-2xl flex items-center justify-center bg-[#0e1322] border border-gold-500/[0.15] group-hover:border-gold-500/30 transition-all duration-300">
                 <step.icon size={20} className="text-gold-400" />
               </div>
 
@@ -103,7 +104,7 @@ export function HowItWorks() {
               </h3>
 
               {/* Description */}
-              <p className="text-sm md:text-[15px] text-warm-500 leading-relaxed flex-1 relative">
+              <p className="text-sm md:text-[15px] text-[#e3e3db]/50 leading-relaxed flex-1 relative">
                 {step.description}
               </p>
 

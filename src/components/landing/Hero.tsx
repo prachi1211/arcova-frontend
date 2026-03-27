@@ -94,14 +94,15 @@ export function Hero() {
           >
             <Link
               to="/search"
-              className="inline-flex items-center justify-center gap-2.5 h-14 px-10 rounded-full text-[15px] font-semibold bg-gold-500 text-navy-950 hover:bg-gold-400 active:bg-gold-600 shadow-lg shadow-gold-500/20 hover:shadow-xl hover:shadow-gold-500/30 transition-all duration-300"
+              className="inline-flex items-center justify-center gap-2.5 h-14 px-10 rounded-full text-[15px] font-semibold text-navy-950 shadow-lg shadow-gold-500/20 hover:shadow-xl hover:shadow-gold-500/30 hover:opacity-90 active:opacity-80 transition-all duration-300"
+              style={{ background: 'linear-gradient(135deg, #eec068 0%, #9c7625 100%)' }}
             >
               <Search className="w-[17px] h-[17px]" />
               Start Exploring
             </Link>
             <Link
               to="/auth/signup"
-              className="inline-flex items-center justify-center gap-2.5 h-14 px-10 rounded-full text-[15px] font-semibold border border-white/25 text-white hover:bg-white/10 hover:border-white/40 transition-all duration-300"
+              className="inline-flex items-center justify-center gap-2.5 h-14 px-10 rounded-full text-[15px] font-semibold border border-gold-500/30 text-gold-400 hover:bg-gold-500/[0.08] hover:border-gold-500/50 transition-all duration-300"
             >
               Create Account
               <ArrowRight className="w-[17px] h-[17px]" />

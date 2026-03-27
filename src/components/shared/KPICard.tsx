@@ -18,25 +18,27 @@ export function KPICard({ label, value, trend, trendLabel, icon: Icon, iconColor
   const isNeutral = trend === 0;
 
   return (
+    /* surface-high card on surface base — tonal lift, no border needed */
     <div
       className={cn(
-        'bg-white rounded-2xl border border-warm-200 p-5 shadow-sm',
+        'bg-[#25293a] rounded-2xl p-5 hover:bg-[#2f3445] transition-colors duration-200',
         className,
       )}
     >
       <div className="flex items-start justify-between mb-3">
-        <p className="text-xs font-medium text-warm-500 uppercase tracking-wide">{label}</p>
+        <p className="text-xs font-medium text-[#e3e3db]/45 uppercase tracking-wide">{label}</p>
         {Icon && (
-          <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', iconColor ?? 'bg-gold-100')}>
-            <Icon size={16} className="text-gold-600" />
+          /* Recessed icon — surface base on surface-high card */
+          <div className={cn('w-8 h-8 rounded-xl flex items-center justify-center', iconColor ?? 'bg-[#0e1322]')}>
+            <Icon size={16} className="text-gold-400" />
           </div>
         )}
       </div>
 
-      <p className="text-2xl font-bold text-navy-950 tracking-tight">{value}</p>
+      <p className="text-2xl font-bold text-[#e3e3db] tracking-tight">{value}</p>
 
       {hasTrend && (
-        <div className={cn('flex items-center gap-1 mt-2 text-xs font-medium', isNeutral ? 'text-warm-500' : isPositive ? 'text-emerald-600' : 'text-red-500')}>
+        <div className={cn('flex items-center gap-1 mt-2 text-xs font-medium', isNeutral ? 'text-[#e3e3db]/40' : isPositive ? 'text-emerald-400' : 'text-red-400')}>
           {isNeutral ? <Minus size={12} /> : isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
           <span>
             {isPositive ? '+' : ''}{trend}%{trendLabel ? ` ${trendLabel}` : ' vs last month'}

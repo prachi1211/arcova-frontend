@@ -4,7 +4,7 @@ import { Header } from '@/components/shared/Header';
 
 export function HostLayout() {
   return (
-    <div className="flex h-screen bg-warm-50 overflow-hidden">
+    <div className="flex h-screen bg-[#0e1322] overflow-hidden">
       <Sidebar role="host" />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />

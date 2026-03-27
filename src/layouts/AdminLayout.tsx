@@ -12,7 +12,7 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-warm-50 overflow-hidden">
+    <div className="flex h-screen bg-[#0e1322] overflow-hidden">
       <Sidebar role="admin" badgeCounts={badgeCounts} />
       <div className="flex-1 flex flex-col min-w-0">
         <Header />

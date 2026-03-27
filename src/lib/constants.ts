@@ -47,17 +47,18 @@ export const ADMIN_NAV: NavItem[] = [
   { label: 'Support', href: '/admin/support', icon: HeadphonesIcon },
 ];
 
+/* Status badge styles — dark-surface optimised, ghost borders only */
 export const BOOKING_STATUS_STYLES: Record<BookingStatus, string> = {
-  confirmed: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-  cancelled: 'bg-red-50 text-red-700 border border-red-200',
-  completed: 'bg-blue-50 text-blue-700 border border-blue-200',
-  no_show: 'bg-warm-100 text-warm-600 border border-warm-200',
+  confirmed: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  cancelled: 'bg-red-500/10 text-red-400 border border-red-500/20',
+  completed: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  no_show: 'bg-white/[0.05] text-[#e3e3db]/45 border border-white/[0.08]',
 };
 
 export const PROPERTY_STATUS_STYLES: Record<PropertyStatus, string> = {
-  active: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-  inactive: 'bg-warm-100 text-warm-600 border border-warm-200',
-  pending_review: 'bg-gold-100 text-gold-600 border border-gold-300',
+  active: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+  inactive: 'bg-white/[0.05] text-[#e3e3db]/45 border border-white/[0.08]',
+  pending_review: 'bg-gold-500/10 text-gold-400 border border-gold-500/20',
 };
 
 export const AMENITY_LABELS: Record<string, string> = {
